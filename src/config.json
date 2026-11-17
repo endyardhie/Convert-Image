@@ -1,0 +1,8 @@
+{
+  "speed": 0,
+  "threads": 4,
+  "standard_edge": 1920,
+  "standard_quality": 60,
+  "small_edge": 1280,
+  "small_quality": 40
+}
