@@ -143,11 +143,13 @@ class InstallTests(unittest.TestCase):
         self.assertEqual(json.loads(config.read_text()), {'speed': 4})
         self.assertEqual(len(list((self.root / 'data/img2avif-backups').glob('*/convert.py'))), 1)
         self.assertTrue(os.access(self.root / '.local/bin/img2avif', os.X_OK))
+        self.assertTrue(os.access(self.root / '.local/bin/convert-image', os.X_OK))
         manager.manage(self.assets, 'uninstall')
         self.assertTrue(config.exists())
         self.assertFalse((self.root / 'data/img2avif/convert.py').exists())
         self.assertFalse((self.root / 'data/nemo-python/extensions/nemo_img2avif.py').exists())
         self.assertFalse((self.root / '.local/bin/img2avif').exists())
+        self.assertFalse((self.root / '.local/bin/convert-image').exists())
 
     def test_write_failure_rolls_back_prior_file(self):
         manager.manage(self.assets, 'install')
@@ -177,6 +179,89 @@ class InstallTests(unittest.TestCase):
             manager.manage(self.assets, 'install')
         self.assertEqual(target.read_text(), 'preserve me')
 
+
+
+class JpegTests(unittest.TestCase):
+    setUp = ImageTests.setUp
+    # Reuse the isolated scratch directory, but only add JPEG-specific cases.
+    def test_jpg_presets_same_format_and_collision(self):
+        source = self.root / 'foto spasi ü.jpg'
+        Image.new('RGB', (2200, 1100), 'steelblue').save(source, quality=98)
+        original = source.read_bytes()
+        with (self.root / 'jpg.log').open('w') as log:
+            for mode, size in [('high', (2200, 1100)), ('standard', (1920, 960)), ('small', (1280, 640))]:
+                first, actual = converter.convert(source, mode, self.cfg, False, converter.Progress(mode, 1, True), log, 'jpg')
+                second, _ = converter.convert(source, mode, self.cfg, False, converter.Progress(mode, 1, True), log, 'jpg')
+                self.assertNotEqual(first, second)
+                self.assertEqual(actual, size)
+                with Image.open(first) as result:
+                    result.load()
+                    self.assertEqual((result.format, result.size), ('JPEG', size))
+                    self.assertTrue(result.info.get('progressive'))
+        self.assertEqual(source.read_bytes(), original)
+
+    def test_jpg_alpha_white_and_icc(self):
+        source = self.root / 'transparent.png'
+        icc = ImageCms.ImageCmsProfile(ImageCms.createProfile('sRGB')).tobytes()
+        Image.new('RGBA', (32, 20), (200, 0, 0, 0)).save(source, icc_profile=icc)
+        with (self.root / 'alpha.log').open('w') as log:
+            target, _ = converter.convert(source, 'high', self.cfg, False, converter.Progress('high', 1, True), log, 'jpg')
+        with Image.open(target) as result:
+            self.assertEqual(result.mode, 'RGB')
+            self.assertEqual(result.getpixel((10, 10)), (255, 255, 255))
+            self.assertEqual(result.info['icc_profile'], icc)
+
+    def test_jpg_cli_without_avif_tools(self):
+        import subprocess
+        source = self.root / 'input.jpeg'
+        Image.new('RGB', (20, 10), 'blue').save(source)
+        env = dict(os.environ, PATH='', XDG_CONFIG_HOME=str(self.root / 'config'), XDG_CACHE_HOME=str(self.root / 'cache'))
+        result = subprocess.run(['/usr/bin/python3', str(ROOT / 'src/convert.py'), '--format', 'jpg', 'standard', '--no-gui', '--', str(source)], env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((self.root / 'input-standard.jpg').exists())
+
+    def test_jpg_save_failure_or_cancellation_never_publishes(self):
+        source = self.root / 'failure.png'
+        Image.new('RGB', (20, 10), 'red').save(source)
+        with (self.root / 'fail.log').open('w') as log:
+            with patch.object(Image.Image, 'save', side_effect=OSError('disk full')):
+                with self.assertRaises(OSError):
+                    converter.convert(source, 'high', self.cfg, False, converter.Progress('high', 1, True), log, 'jpg')
+            progress = converter.Progress('high', 1, True)
+            with patch.object(progress, 'check', side_effect=[None, converter.Cancelled()]):
+                with self.assertRaises(converter.Cancelled):
+                    converter.convert(source, 'high', self.cfg, False, progress, log, 'jpg')
+        self.assertFalse(list(self.root.glob('failure-*.jpg')))
+        self.assertFalse(list(self.root.glob('.img2avif-*')))
+
+
+class MenuTests(unittest.TestCase):
+    def test_two_formats_three_presets_and_callback_arguments(self):
+        import types
+        class Menu:
+            def __init__(self): self.items = []
+            def append_item(self, item): self.items.append(item)
+        class Item:
+            def __init__(self, **kwargs): self.__dict__.update(kwargs)
+            def set_submenu(self, menu): self.submenu = menu
+            def connect(self, signal, callback, *args): self.activation = args
+        class File:
+            def is_directory(self): return False
+            def get_uri(self): return 'file:///tmp/test.jpg'
+        gi = types.ModuleType('gi'); gi.require_version = lambda *args: None
+        repository = types.ModuleType('gi.repository')
+        repository.Nemo = types.SimpleNamespace(Menu=Menu, MenuItem=Item, MenuProvider=type('Provider', (), {}))
+        repository.GObject = types.SimpleNamespace(GObject=type('GObject', (), {}))
+        repository.Gio = types.SimpleNamespace(File=types.SimpleNamespace(new_for_uri=lambda uri: types.SimpleNamespace(get_path=lambda: '/tmp/test.jpg')))
+        with patch.dict('sys.modules', {'gi': gi, 'gi.repository': repository}):
+            module = load('test_nemo_menu', ROOT / 'src/nemo_img2avif.py')
+        root = module.Img2AvifMenu().get_file_items(None, [File()])[0]
+        self.assertEqual(root.label, 'Convert Image')
+        self.assertEqual([x.label for x in root.submenu.items], ['Avif', 'Jpg'])
+        for item, output_format in zip(root.submenu.items, ['avif', 'jpg']):
+            self.assertEqual([x.label for x in item.submenu.items], ['High Quality', 'Standard', 'Small Size'])
+            for child, mode in zip(item.submenu.items, ['high', 'standard', 'small']):
+                self.assertEqual(child.activation, (output_format, mode, ('/tmp/test.jpg',)))
 
 if __name__ == '__main__':
     unittest.main()

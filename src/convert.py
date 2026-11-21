@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Img2Avif: safe, sequential still-image conversion for Nemo."""
+"""Convert Image: safe, sequential still-image conversion for Nemo."""
 import argparse
 import errno
 import io
@@ -17,7 +17,8 @@ import warnings
 from PIL import Image, ImageOps, ImageCms
 
 DEFAULTS = {"speed": 0, "threads": 4, "standard_edge": 1920,
-            "standard_quality": 60, "small_edge": 1280, "small_quality": 40}
+            "standard_quality": 60, "small_edge": 1280, "small_quality": 40, "jpg_high_quality": 95,
+            "jpg_standard_quality": 85, "jpg_small_quality": 70}
 MODES = {"high": "High Quality", "standard": "Standard", "small": "Small Size"}
 EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 warnings.simplefilter("error", Image.DecompressionBombWarning)
@@ -29,7 +30,7 @@ class Cancelled(Exception):
 
 def message(text, error=False):
     subprocess.run(["zenity", "--error" if error else "--info", "--no-markup",
-                    "--title=Convert Img2Avif", "--width=560", "--text=" + text],
+                    "--title=Convert Image", "--width=560", "--text=" + text],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
@@ -39,7 +40,8 @@ def settings():
     if config.exists():
         result.update(json.loads(config.read_text()))
     limits = {"speed": (0, 10), "threads": (1, 64), "standard_edge": (1, 16384),
-              "small_edge": (1, 16384), "standard_quality": (1, 99), "small_quality": (1, 99)}
+              "small_edge": (1, 16384), "standard_quality": (1, 99), "small_quality": (1, 99), "jpg_high_quality": (1, 95),
+              "jpg_standard_quality": (1, 95), "jpg_small_quality": (1, 95)}
     for key, (low, high) in limits.items():
         value = result[key]
         if type(value) is not int or not low <= value <= high:
@@ -51,12 +53,12 @@ def settings():
 
 
 class Progress:
-    def __init__(self, mode, count, headless):
+    def __init__(self, mode, count, headless, output_format="avif"):
         self.proc = None
         if not headless:
             self.proc = subprocess.Popen(
                 ["zenity", "--progress", "--pulsate", "--auto-close", "--no-markup",
-                 "--title=Convert Img2Avif — " + MODES[mode], "--width=520",
+                 "--title=Convert Image — " + output_format.upper() + " — " + MODES[mode], "--width=520",
                  "--text=Memulai konversi " + str(count) + " gambar..."],
                 stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                 text=True)
@@ -107,18 +109,18 @@ def run(command, progress, log):
                 proc.wait()
 
 
-def prepare(source, mode, cfg):
+def prepare(source, mode, cfg, output_format="avif"):
     with source.open("rb") as stream:
         header = stream.read(29)
     # Pillow otherwise silently reduces RGB/RGBA 16-bit PNGs to 8-bit.
-    if mode == "high" and header[:8] == b"\x89PNG\r\n\x1a\n" and len(header) > 24 and header[24] > 8:
+    if output_format == "avif" and mode == "high" and header[:8] == b"\x89PNG\r\n\x1a\n" and len(header) > 24 and header[24] > 8:
         raise ValueError("PNG 16-bit: High Quality dilewati agar tidak menurunkan kedalaman warna")
     with Image.open(source) as original:
         if original.format not in ("JPEG", "PNG", "WEBP"):
             raise ValueError("Isi file bukan JPEG, PNG, atau WebP")
         if getattr(original, "n_frames", 1) != 1:
             raise ValueError("Animasi dilewati; skrip ini untuk gambar diam")
-        if mode == "high" and original.mode not in ("1", "L", "LA", "P", "RGB", "RGBA"):
+        if output_format == "avif" and mode == "high" and original.mode not in ("1", "L", "LA", "P", "RGB", "RGBA"):
             raise ValueError("High Quality memerlukan gambar RGB/grayscale 8-bit; mode " + original.mode + " dilewati")
         image = ImageOps.exif_transpose(original)
         profile = original.info.get("icc_profile")
@@ -160,12 +162,12 @@ def encoder_args(mode, cfg, modern):
     return args
 
 
-def publish(encoded, source, mode):
+def publish(encoded, source, mode, output_format="avif"):
     """No overwrite even when separate jobs target the same name."""
     base = source.stem + "-" + mode
     for index in range(10000):
         suffix = "" if index == 0 else "-" + str(index)
-        target = source.with_name(base + suffix + ".avif")
+        target = source.with_name(base + suffix + "." + output_format)
         try:
             os.link(encoded, target)
             return target
@@ -189,13 +191,35 @@ def publish(encoded, source, mode):
     raise RuntimeError("Terlalu banyak hasil dengan nama yang sama")
 
 
-def convert(source, mode, cfg, modern, progress, log):
+def convert(source, mode, cfg, modern, progress, log, output_format="avif"):
+    if output_format not in ("avif", "jpg"):
+        raise ValueError("Format output tidak didukung")
     if source.suffix.lower() not in EXTENSIONS or not source.is_file():
         raise ValueError("File tidak didukung atau tidak ditemukan")
-    image = prepare(source, mode, cfg)
+    image = prepare(source, mode, cfg, output_format)
     with tempfile.TemporaryDirectory(prefix=".img2avif-", dir=source.parent) as scratch:
         temp = Path(scratch)
-        png, encoded, decoded = temp / "input.png", temp / "output.avif", temp / "check.png"
+        png, encoded, decoded = temp / "input.png", temp / ("output." + output_format), temp / "check.png"
+        if output_format == "jpg":
+            # JPEG has no alpha channel; composite on white instead of discarding alpha.
+            profile = image.info.get("icc_profile")
+            if image.mode == "RGBA":
+                background = Image.new("RGB", image.size, "white")
+                background.paste(image, mask=image.getchannel("A"))
+                image = background
+            else:
+                image = image.convert("RGB")
+            progress.update("Encoding JPG: " + source.name)
+            image.save(encoded, format="JPEG", quality=cfg["jpg_" + mode + "_quality"],
+                       subsampling=0 if mode == "high" else 2, optimize=True,
+                       progressive=True, icc_profile=profile)
+            progress.check()
+            with Image.open(encoded) as check:
+                check.load()
+                if check.format != "JPEG" or check.size != image.size:
+                    raise RuntimeError("Verifikasi JPG gagal")
+            target = publish(encoded, source, mode, output_format)
+            return target, image.size
         image.save(png, format="PNG", compress_level=1)
         run(encoder_args(mode, cfg, modern) + [str(png), str(encoded)], progress, log)
         if not encoded.is_file() or not encoded.stat().st_size:
@@ -217,37 +241,40 @@ def main():
         request = Path(sys.argv[2])
         try:
             payload = json.loads(request.read_text())
-            sys.argv[1:] = [payload["mode"], "--"] + list(payload["files"])
+            sys.argv[1:] = ["--format", payload.get("format", "avif"), payload["mode"], "--"] + list(payload["files"])
         finally:
             request.unlink(missing_ok=True)
-    parser = argparse.ArgumentParser(description="Convert Img2Avif untuk Nemo")
+    parser = argparse.ArgumentParser(description="Convert Image untuk Nemo")
+    parser.add_argument("--format", choices=("avif", "jpg"), default="avif", dest="output_format")
     parser.add_argument("mode", choices=MODES)
     parser.add_argument("--no-gui", action="store_true")
     parser.add_argument("files", nargs="+")
     args = parser.parse_args()
     progress = None
     try:
-        required = ["avifenc", "avifdec"] + ([] if args.no_gui else ["zenity"])
+        required = (["avifenc", "avifdec"] if args.output_format == "avif" else []) + ([] if args.no_gui else ["zenity"])
         for tool in required:
             if not shutil.which(tool):
                 raise RuntimeError("Program belum terpasang: " + tool)
         cfg = settings()
-        helptext = subprocess.run(["avifenc", "--help"], capture_output=True, text=True, check=True).stdout
-        modern = "--qcolor" in helptext
+        modern = False
+        if args.output_format == "avif":
+            probe = subprocess.run(["avifenc", "--help"], capture_output=True, text=True, check=True)
+            modern = "--qcolor" in probe.stdout + probe.stderr
         cache = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "img2avif"
         cache.mkdir(parents=True, exist_ok=True)
         descriptor, name = tempfile.mkstemp(prefix="convert-", suffix=".log", dir=cache)
         logpath = Path(name)
         done, errors, total_in, total_out = [], [], 0, 0
         cancelled = False
-        progress = Progress(args.mode, len(args.files), args.no_gui)
+        progress = Progress(args.mode, len(args.files), args.no_gui, args.output_format)
         with os.fdopen(descriptor, "w") as log:
             for number, filename in enumerate(args.files, 1):
                 source = Path(os.path.abspath(filename))
                 try:
-                    progress.update("{}/{} — {} (kompresi maksimum, mohon tunggu)".format(number, len(args.files), source.name))
+                    progress.update("{}/{} — {} (mohon tunggu)".format(number, len(args.files), source.name))
                     before = source.stat().st_size
-                    target, size = convert(source, args.mode, cfg, modern, progress, log)
+                    target, size = convert(source, args.mode, cfg, modern, progress, log, args.output_format)
                     after = target.stat().st_size
                     total_in += before
                     total_out += after
@@ -265,7 +292,7 @@ def main():
                 log.flush()
         progress.close()
         progress = None
-        summary = "{}\nBerhasil: {} | Gagal/dilewati: {}".format(MODES[args.mode], len(done), len(errors))
+        summary = "{}\nBerhasil: {} | Gagal/dilewati: {}".format(args.output_format.upper() + " — " + MODES[args.mode], len(done), len(errors))
         if cancelled:
             summary += "\nDibatalkan. Hasil yang sudah selesai tetap tersimpan."
         if total_in:

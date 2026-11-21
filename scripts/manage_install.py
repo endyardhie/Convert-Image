@@ -28,7 +28,7 @@ def manage(assets, action):
     launcher = Path.home() / '.local/bin/img2avif'
     converter = data / 'img2avif/convert.py'
     extension = data / 'nemo-python/extensions/nemo_img2avif.py'
-    paths = {'convert.py': converter, 'nemo_img2avif.py': extension, 'img2avif': launcher}
+    paths = {'convert.py': converter, 'nemo_img2avif.py': extension, 'img2avif': launcher, 'convert-image': launcher.with_name('convert-image')}
     if action not in ('install', 'uninstall'):
         raise ValueError('Aksi tidak dikenal: ' + action)
     if action == 'install':
@@ -36,6 +36,7 @@ def manage(assets, action):
         ast.parse(assets['nemo_img2avif.py'])
         defaults = json.loads(assets['config.json'])
         assets = dict(assets, img2avif='#!/usr/bin/env bash\nexec /usr/bin/python3 ' + shlex.quote(str(converter)) + ' "$@"\n')
+        assets['convert-image'] = assets['img2avif']
     backup = None
     for key, path in paths.items():
         if path.is_symlink():
@@ -53,7 +54,7 @@ def manage(assets, action):
     try:
         for key, path in paths.items():
             if action == 'install':
-                atomic_write(path, assets[key], 0o755 if key == 'img2avif' else 0o644)
+                atomic_write(path, assets[key], 0o755 if key in ('img2avif', 'convert-image') else 0o644)
             else:
                 path.unlink(missing_ok=True)
             changed.append((key, path))
@@ -79,9 +80,10 @@ def manage(assets, action):
     if backup:
         print('Backup:', backup)
     if action == 'install':
-        print('Menu terpasang: Convert Img2Avif > High Quality / Standard / Small Size')
+        print('Menu terpasang: Convert Image > Avif / Jpg > High Quality / Standard / Small Size')
         print('Konfigurasi:', config)
-        print('CLI:', launcher)
+        print('CLI:', launcher.with_name('convert-image'))
+        print('Alias kompatibilitas:', launcher)
     else:
         print('Converter, launcher, dan menu dihapus.')
         print('Gambar, konfigurasi, log, dan backup tetap tersimpan.')

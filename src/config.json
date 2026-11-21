@@ -4,5 +4,8 @@
   "standard_edge": 1920,
   "standard_quality": 60,
   "small_edge": 1280,
-  "small_quality": 40
+  "small_quality": 40,
+  "jpg_high_quality": 95,
+  "jpg_standard_quality": 85,
+  "jpg_small_quality": 70
 }

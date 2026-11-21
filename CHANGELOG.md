@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.0
+
+- Nama proyek/repo menjadi Nemo Convert Image / Nemo-Convert-Image.
+- Menu bertingkat Convert Image → Avif/Jpg → High Quality/Standard/Small Size.
+- Tambah JPG kualitas 95/85/70, optimized progressive JPEG, dan latar putih untuk alpha.
+- Izinkan input JPG/JPEG diproses ulang ke JPG dengan output baru tanpa overwrite.
+- Tambah CLI `convert-image --format avif|jpg`, installer `install-image.sh`, dan konfigurasi `jpg_*`.
+- Pertahankan installer, CLI, lokasi konfigurasi/cache, dan nama ekstensi lama untuk update kompatibel.
+- Tambah pengujian JPG dan struktur menu; perbarui installer yang dihasilkan.
+
 ## 1.0.0 — 2026-11-18
 
 - Menu Nemo Convert Img2Avif dengan High Quality, Standard, dan Small Size.
