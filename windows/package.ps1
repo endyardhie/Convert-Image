@@ -27,9 +27,11 @@ if (-not (Test-Path $iscc)) { throw 'Inno Setup 6 tidak ditemukan' }
 if ($LASTEXITCODE -ne 0) { throw 'Build installer gagal' }
 $installer = Get-Item "dist/Convert-Image-$($version.version)-Windows-x64-Setup.exe"
 $installer.VersionInfo | Select-Object ProductName, ProductVersion, FileVersion, CompanyName | ConvertTo-Json | Write-Host
-if ($installer.VersionInfo.ProductName -ne $version.product_name -or
-    $installer.VersionInfo.ProductVersion -ne $version.version -or
-    $installer.VersionInfo.FileVersion -ne $version.file_version) {
+# Inno Setup keeps fixed-width VERSIONINFO strings padded with spaces.
+if ($installer.VersionInfo.ProductName.Trim() -ne $version.product_name -or
+    $installer.VersionInfo.ProductVersion.Trim() -ne $version.version -or
+    $installer.VersionInfo.FileVersion.Trim() -ne $version.file_version -or
+    $installer.VersionInfo.CompanyName.Trim() -ne $version.company_name) {
     throw 'Metadata installer tidak sesuai'
 }
 if ($RequireSignedPayload) { $env:CONVERT_IMAGE_REQUIRE_SIGNED = '1' }
