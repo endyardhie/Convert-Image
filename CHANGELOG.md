@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.0
+
+- Tambah submenu Pdf dengan High Quality, Standard, dan Small Size.
+- Satu gambar per PDF satu halaman; kompresi JPEG 95/85/70, resize proporsional dan latar putih untuk alpha.
+- Verifikasi struktur PDF dan gambar sebelum publikasi; mendukung CLI `--format pdf`.
+- Tambah dependensi ReportLab/pypdf, konfigurasi `pdf_*`, tes PDF, serta dokumentasi.
+
 ## 2.0.0
 
 - Nama proyek/repo menjadi Nemo Convert Image / Nemo-Convert-Image.

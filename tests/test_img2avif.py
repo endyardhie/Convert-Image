@@ -236,7 +236,7 @@ class JpegTests(unittest.TestCase):
 
 
 class MenuTests(unittest.TestCase):
-    def test_two_formats_three_presets_and_callback_arguments(self):
+    def test_three_formats_three_presets_and_callback_arguments(self):
         import types
         class Menu:
             def __init__(self): self.items = []
@@ -257,8 +257,8 @@ class MenuTests(unittest.TestCase):
             module = load('test_nemo_menu', ROOT / 'src/nemo_img2avif.py')
         root = module.Img2AvifMenu().get_file_items(None, [File()])[0]
         self.assertEqual(root.label, 'Convert Image')
-        self.assertEqual([x.label for x in root.submenu.items], ['Avif', 'Jpg'])
-        for item, output_format in zip(root.submenu.items, ['avif', 'jpg']):
+        self.assertEqual([x.label for x in root.submenu.items], ['Avif', 'Jpg', 'Pdf'])
+        for item, output_format in zip(root.submenu.items, ['avif', 'jpg', 'pdf']):
             self.assertEqual([x.label for x in item.submenu.items], ['High Quality', 'Standard', 'Small Size'])
             for child, mode in zip(item.submenu.items, ['high', 'standard', 'small']):
                 self.assertEqual(child.activation, (output_format, mode, ('/tmp/test.jpg',)))

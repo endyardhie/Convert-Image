@@ -14,11 +14,17 @@ import tempfile
 import time
 import warnings
 
+# Optional user-local PDF dependencies, used when system packages are unavailable.
+_vendor = Path(__file__).resolve().parent / "vendor"
+if _vendor.is_dir():
+    sys.path.insert(0, str(_vendor))
+
 from PIL import Image, ImageOps, ImageCms
 
 DEFAULTS = {"speed": 0, "threads": 4, "standard_edge": 1920,
             "standard_quality": 60, "small_edge": 1280, "small_quality": 40, "jpg_high_quality": 95,
-            "jpg_standard_quality": 85, "jpg_small_quality": 70}
+            "jpg_standard_quality": 85, "jpg_small_quality": 70,
+            "pdf_high_quality": 95, "pdf_standard_quality": 85, "pdf_small_quality": 70}
 MODES = {"high": "High Quality", "standard": "Standard", "small": "Small Size"}
 EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 warnings.simplefilter("error", Image.DecompressionBombWarning)
@@ -41,7 +47,8 @@ def settings():
         result.update(json.loads(config.read_text()))
     limits = {"speed": (0, 10), "threads": (1, 64), "standard_edge": (1, 16384),
               "small_edge": (1, 16384), "standard_quality": (1, 99), "small_quality": (1, 99), "jpg_high_quality": (1, 95),
-              "jpg_standard_quality": (1, 95), "jpg_small_quality": (1, 95)}
+              "jpg_standard_quality": (1, 95), "jpg_small_quality": (1, 95), "pdf_high_quality": (1, 95),
+              "pdf_standard_quality": (1, 95), "pdf_small_quality": (1, 95)}
     for key, (low, high) in limits.items():
         value = result[key]
         if type(value) is not int or not low <= value <= high:
@@ -191,8 +198,46 @@ def publish(encoded, source, mode, output_format="avif"):
     raise RuntimeError("Terlalu banyak hasil dengan nama yang sama")
 
 
+def encode_pdf(image, encoded, mode, cfg, progress):
+    """One image per page, preserving aspect ratio with no margins or cropping."""
+    from reportlab.pdfgen.canvas import Canvas
+    from reportlab.lib.utils import ImageReader
+    from pypdf import PdfReader
+
+    progress.update("Encoding PDF")
+    jpeg = io.BytesIO()
+    image.save(jpeg, format="JPEG", quality=cfg["pdf_" + mode + "_quality"],
+               subsampling=0 if mode == "high" else 2, optimize=True, progressive=True)
+    jpeg.seek(0)
+    progress.check()
+    # Nominal 96 dpi; keep unusually wide/tall pages within the PDF page limit.
+    scale = min(72 / 96, 14400 / max(image.size))
+    width, height = (edge * scale for edge in image.size)
+    canvas = Canvas(str(encoded), pagesize=(width, height), pageCompression=1, invariant=1)
+    canvas.setTitle("Converted image")
+    canvas.drawImage(ImageReader(jpeg), 0, 0, width=width, height=height)
+    canvas.showPage()
+    canvas.save()
+    progress.check()
+    with encoded.open("rb") as stream:
+        reader = PdfReader(stream, strict=True)
+        if len(reader.pages) != 1:
+            raise RuntimeError("Verifikasi PDF gagal: jumlah halaman")
+        page = reader.pages[0]
+        if abs(float(page.mediabox.width) - width) > 0.01 or abs(float(page.mediabox.height) - height) > 0.01:
+            raise RuntimeError("Verifikasi PDF gagal: ukuran halaman")
+        objects = page["/Resources"]["/XObject"].get_object()
+        images = [obj.get_object() for obj in objects.values() if obj.get_object().get("/Subtype") == "/Image"]
+        if len(images) != 1 or (images[0]["/Width"], images[0]["/Height"]) != image.size:
+            raise RuntimeError("Verifikasi PDF gagal: dimensi gambar")
+        with Image.open(io.BytesIO(images[0].get_data())) as check:
+            check.load()
+            if check.size != image.size:
+                raise RuntimeError("Verifikasi PDF gagal: decode gambar")
+
+
 def convert(source, mode, cfg, modern, progress, log, output_format="avif"):
-    if output_format not in ("avif", "jpg"):
+    if output_format not in ("avif", "jpg", "pdf"):
         raise ValueError("Format output tidak didukung")
     if source.suffix.lower() not in EXTENSIONS or not source.is_file():
         raise ValueError("File tidak didukung atau tidak ditemukan")
@@ -200,7 +245,7 @@ def convert(source, mode, cfg, modern, progress, log, output_format="avif"):
     with tempfile.TemporaryDirectory(prefix=".img2avif-", dir=source.parent) as scratch:
         temp = Path(scratch)
         png, encoded, decoded = temp / "input.png", temp / ("output." + output_format), temp / "check.png"
-        if output_format == "jpg":
+        if output_format in ("jpg", "pdf"):
             # JPEG has no alpha channel; composite on white instead of discarding alpha.
             profile = image.info.get("icc_profile")
             if image.mode == "RGBA":
@@ -209,6 +254,14 @@ def convert(source, mode, cfg, modern, progress, log, output_format="avif"):
                 image = background
             else:
                 image = image.convert("RGB")
+            if output_format == "pdf":
+                # PDF DeviceRGB uses sRGB pixels rather than an untagged source profile.
+                if profile:
+                    srgb = ImageCms.createProfile("sRGB")
+                    image = ImageCms.profileToProfile(image, ImageCms.ImageCmsProfile(io.BytesIO(profile)), srgb, outputMode="RGB")
+                encode_pdf(image, encoded, mode, cfg, progress)
+                progress.check()
+                return publish(encoded, source, mode, output_format), image.size
             progress.update("Encoding JPG: " + source.name)
             image.save(encoded, format="JPEG", quality=cfg["jpg_" + mode + "_quality"],
                        subsampling=0 if mode == "high" else 2, optimize=True,
@@ -245,7 +298,7 @@ def main():
         finally:
             request.unlink(missing_ok=True)
     parser = argparse.ArgumentParser(description="Convert Image untuk Nemo")
-    parser.add_argument("--format", choices=("avif", "jpg"), default="avif", dest="output_format")
+    parser.add_argument("--format", choices=("avif", "jpg", "pdf"), default="avif", dest="output_format")
     parser.add_argument("mode", choices=MODES)
     parser.add_argument("--no-gui", action="store_true")
     parser.add_argument("files", nargs="+")
@@ -256,6 +309,12 @@ def main():
         for tool in required:
             if not shutil.which(tool):
                 raise RuntimeError("Program belum terpasang: " + tool)
+        if args.output_format == "pdf":
+            try:
+                import reportlab
+                import pypdf
+            except ImportError as exc:
+                raise RuntimeError("Dependensi PDF belum tersedia; jalankan ulang installer: " + str(exc))
         cfg = settings()
         modern = False
         if args.output_format == "avif":

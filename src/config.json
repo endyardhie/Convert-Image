@@ -7,5 +7,8 @@
   "small_quality": 40,
   "jpg_high_quality": 95,
   "jpg_standard_quality": 85,
-  "jpg_small_quality": 70
+  "jpg_small_quality": 70,
+  "pdf_high_quality": 95,
+  "pdf_standard_quality": 85,
+  "pdf_small_quality": 70
 }

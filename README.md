@@ -1,6 +1,6 @@
 # Nemo Convert Image
 
-Konversi JPG, JPEG, PNG, dan WebP ke **AVIF atau JPG** melalui menu klik kanan **Nemo**. Dibuat untuk Linux Mint Cinnamon, dengan tiga preset, pemrosesan banyak file, dan installer untuk pengguna desktop.
+Konversi JPG, JPEG, PNG, dan WebP ke **AVIF, JPG, atau PDF** melalui menu klik kanan **Nemo**. Dibuat untuk Linux Mint Cinnamon, dengan tiga preset per format, pemrosesan banyak file, dan installer untuk pengguna desktop.
 
 ```text
 Klik kanan → Convert Image
@@ -8,7 +8,11 @@ Klik kanan → Convert Image
               │   ├── High Quality
               │   ├── Standard
               │   └── Small Size
-              └── Jpg
+              ├── Jpg
+              │   ├── High Quality
+              │   ├── Standard
+              │   └── Small Size
+              └── Pdf
                   ├── High Quality
                   ├── Standard
                   └── Small Size
@@ -40,6 +44,20 @@ Rasio gambar dipertahankan dan gambar kecil tidak diperbesar. Semua preset AVIF 
 
 Semua preset JPG memakai encoding **lossy**, `optimize` dan progressive JPEG dari Pillow. JPG tidak mendukung transparansi: area transparan dikompositkan pada latar putih. Profil ICC diteruskan; orientasi EXIF diterapkan, metadata EXIF/XMP tidak disalin. Resolusi tidak diperbesar. Re-encode JPG dapat mengurangi kualitas dan dapat menghasilkan file yang lebih besar, terutama pada High Quality.
 
+### Pdf
+
+Satu gambar menghasilkan **satu file PDF satu halaman**, bukan menggabungkan batch ke satu dokumen. Input tetap JPG/JPEG, PNG, atau WebP; aplikasi ini tidak mengonversi dokumen PDF sebagai input.
+
+| Preset | Resolusi gambar di PDF | Kompresi gambar |
+| --- | --- | --- |
+| **High Quality** | Resolusi asli | JPEG kualitas **95**, 4:4:4 |
+| **Standard** | Sisi terpanjang maksimal **1920 px** | JPEG kualitas **85**, 4:2:0 |
+| **Small Size** | Sisi terpanjang maksimal **1280 px** | JPEG kualitas **70**, 4:2:0 |
+
+PDF mengikuti rasio gambar, tanpa crop atau margin tambahan, dengan ukuran halaman nominal 96 dpi (halaman sangat panjang dibatasi sambil menjaga rasio). Area transparan memakai latar putih; orientasi EXIF diterapkan dan gambar dengan profil ICC dinormalisasi ke sRGB. Gambar di dalam PDF memakai kompresi lossy, termasuk High Quality. PDF ini berupa gambar, tanpa OCR atau teks yang dapat dipilih. Ukuran file akhir tidak dijamin lebih kecil.
+
+PDF dibuat menggunakan ReportLab dan diperiksa ulang menggunakan pypdf: jumlah halaman, ukuran halaman, dimensi gambar, dan kemampuan decode gambar di dalamnya diperiksa sebelum file dipublikasikan.
+
 ## Instalasi
 
 ### Unduh satu installer
@@ -66,17 +84,17 @@ Setelah pemasangan selesai, tunggu aktivitas salin/pindah file di Nemo selesai, 
 nemo -q
 ```
 
-Buka kembali Nemo, pilih satu atau beberapa gambar, lalu **klik kanan → Convert Image → Avif atau Jpg → pilih preset**. Jika menu belum muncul, periksa **Edit → Plugins** dan aktifkan ekstensi yang terkait, lalu mulai ulang Nemo.
+Buka kembali Nemo, pilih satu atau beberapa gambar, lalu **klik kanan → Convert Image → Avif / Jpg / Pdf → pilih preset**. Jika menu belum muncul, periksa **Edit → Plugins** dan aktifkan ekstensi yang terkait, lalu mulai ulang Nemo.
 
 ## Perilaku aplikasi
 
 - File asli tidak ditimpa atau dihapus.
-- Hasil disimpan di folder sumber: `foto-high.avif` atau `foto-high.jpg`, sesuai format dan preset. Standard/Small memakai akhiran `-standard`/`-small`.
+- Hasil disimpan di folder sumber: `foto-high.avif`, `foto-high.jpg`, atau `foto-high.pdf`, sesuai format dan preset. Standard/Small memakai akhiran `-standard`/`-small`.
 - Jika nama sudah ada, nomor ditambahkan, misalnya `foto-high-1.avif`.
 - Mendukung nama file dengan spasi, Unicode, dan karakter khusus tanpa mengeksekusinya sebagai perintah shell.
 - Batch diproses berurutan di luar proses Nemo agar file manager tetap responsif.
 - Dialog menampilkan file yang sedang diproses, tombol batal, dan ringkasan ukuran setelah selesai.
-- Batal menghentikan encoder AVIF aktif. Untuk JPG, pembatalan diperiksa setelah encoding selesai sebelum publikasi hasil. Hasil yang sudah selesai tetap disimpan.
+- Batal menghentikan encoder AVIF aktif. Untuk JPG/PDF, pembatalan diperiksa setelah encoding selesai sebelum publikasi hasil. Hasil yang sudah selesai tetap disimpan.
 - Pada AVIF, transparansi dan profil ICC diteruskan. Orientasi EXIF diterapkan ke piksel; EXIF/XMP tidak disalin.
 - Setiap hasil didekode untuk pemeriksaan dimensi. AVIF High Quality juga memeriksa kesamaan seluruh piksel RGBA.
 
@@ -91,11 +109,11 @@ Nama paket binding berbeda menurut distribusi:
 | Linux Mint | `python-nemo` |
 | Ubuntu / Debian | `nemo-python` |
 
-Paket lain: `python3`, `python3-gi`, `gir1.2-nemo-3.0`, `python3-pil`, `libavif-bin`, `zenity`.
+Paket lain: `python3`, `python3-gi`, `gir1.2-nemo-3.0`, `python3-pil`, `python3-reportlab`, `python3-pypdf`, `libavif-bin`, `zenity`.
 
 - Gambar animasi WebP/APNG dilewati; aplikasi ini hanya untuk gambar diam.
 - AVIF High Quality melewati PNG lebih dari 8-bit dan JPEG CMYK agar tidak mengklaim lossless setelah menurunkan kedalaman atau mengubah model warna.
-- Standard/Small AVIF dan seluruh preset JPG menghasilkan gambar 8-bit; kedalaman PNG 16-bit akan berkurang. JPEG CMYK dengan profil ICC dikonversi melalui profilnya; tanpa profil digunakan konversi bawaan Pillow.
+- Standard/Small AVIF dan seluruh preset JPG/PDF menghasilkan gambar 8-bit; kedalaman PNG 16-bit akan berkurang. JPEG CMYK dengan profil ICC dikonversi melalui profilnya; tanpa profil digunakan konversi bawaan Pillow.
 - Hanya file lokal/mount dengan path lokal yang didukung. File perlu bisa dibaca dan folder sumber perlu bisa ditulis.
 - Dibutuhkan ruang sementara untuk PNG dan hasil decode. Foto besar dengan speed 0 bisa membutuhkan waktu beberapa menit atau lebih.
 - Encoding yang gagal atau tidak lolos pemeriksaan tidak dipublikasikan sebagai hasil akhir.
@@ -114,13 +132,16 @@ Pengaturan dibuat di `~/.config/img2avif/config.json` (atau `$XDG_CONFIG_HOME/im
   "small_quality": 40,
   "jpg_high_quality": 95,
   "jpg_standard_quality": 85,
-  "jpg_small_quality": 70
+  "jpg_small_quality": 70,
+  "pdf_high_quality": 95,
+  "pdf_standard_quality": 85,
+  "pdf_small_quality": 70
 }
 ```
 
 `speed` berada pada rentang 0–10: 0 paling lambat; angka lebih tinggi mempercepat encoding dan dapat mengubah ukuran file. Untuk penggunaan harian yang lebih cepat, coba 4 atau 6. `threads` dibatasi jumlah CPU yang tersedia. Perubahan konfigurasi dibaca pada konversi berikutnya. Tooltip menu menunjukkan nilai default.
 
-Installer tidak menimpa konfigurasi yang sudah ada. Konfigurasi lama yang belum memiliki opsi `jpg_*` otomatis memakai default 95/85/70. Rentang kualitas JPG adalah 1–95; opsi `standard_quality`/`small_quality` dan `speed` khusus AVIF, sedangkan batas resolusi dipakai kedua format.
+Installer tidak menimpa konfigurasi yang sudah ada. Konfigurasi lama yang belum memiliki opsi `jpg_*`/`pdf_*` otomatis memakai default 95/85/70. Rentang kualitas JPG/PDF adalah 1–95; opsi `standard_quality`/`small_quality` dan `speed` khusus AVIF, sedangkan batas resolusi dipakai semua format.
 
 ## Update, pemeriksaan, dan uninstall
 
@@ -156,7 +177,20 @@ CLI dapat digunakan bila `~/.local/bin` ada dalam PATH:
 ```bash
 convert-image --format avif standard --no-gui -- "/path/foto satu.jpg" "/path/foto dua.png"
 convert-image --format jpg small --no-gui -- "/path/foto satu.jpg"
+convert-image --format pdf standard --no-gui -- "/path/foto satu.jpg" "/path/foto dua.png"
 ```
+
+### Dependensi PDF tanpa akses administrator
+
+Installer APT memasang `python3-reportlab` dan `python3-pypdf`. Jika pemasangan paket sistem tidak tersedia tetapi Python pip sudah ada, alternatifnya pasang hanya untuk converter ini:
+
+```bash
+pdf_vendor="${XDG_DATA_HOME:-$HOME/.local/share}/img2avif/vendor"
+python3 -m pip install --target "$pdf_vendor" 'reportlab>=3.6,<5' 'pypdf>=3,<7'
+bash install-image.sh --no-deps
+```
+
+Converter dan pemeriksa dependensi installer dapat membaca folder `vendor` tersebut. Uninstall mempertahankan folder dependensi ini, seperti konfigurasi dan log. JPG dan AVIF tidak menggunakan pustaka PDF pada proses konversinya.
 
 ## Troubleshooting
 
@@ -179,7 +213,7 @@ python3 scripts/build_installer.py --check
 python3 -m unittest discover -s tests -v
 ```
 
-Tes JPG memakai encoder JPEG Pillow asli, termasuk JPG → JPG, ketiga preset, alpha putih, profil ICC, kegagalan/batal, serta CLI tanpa codec AVIF. Hierarki enam aksi menu diuji dengan API Nemo tiruan. Tes integrasi AVIF memakai `avifenc` dan `avifdec` asli jika tersedia; bila tidak tersedia, tes tersebut ditandai **skipped**, bukan dianggap lulus. Tes tidak memasang paket maupun me-restart Nemo. Sebelum rilis, lakukan juga pemasangan dan klik kanan manual pada Linux Mint Cinnamon.
+Tes JPG memakai encoder JPEG Pillow asli, termasuk JPG → JPG, ketiga preset, alpha putih, profil ICC, kegagalan/batal, serta CLI tanpa codec AVIF. Hierarki sembilan aksi menu diuji dengan API Nemo tiruan. Tes PDF memeriksa ketiga preset, satu halaman per gambar, rasio dan dimensi, orientasi EXIF, alpha putih, penamaan tanpa overwrite, kegagalan/batal, kompatibilitas konfigurasi, dan batch CLI. Tes integrasi AVIF memakai `avifenc` dan `avifdec` asli jika tersedia; bila tidak tersedia, tes tersebut ditandai **skipped**, bukan dianggap lulus. Tes tidak memasang paket maupun me-restart Nemo. Sebelum rilis, lakukan juga pemasangan dan klik kanan manual pada Linux Mint Cinnamon.
 
 ## Referensi
 

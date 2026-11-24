@@ -80,7 +80,7 @@ def manage(assets, action):
     if backup:
         print('Backup:', backup)
     if action == 'install':
-        print('Menu terpasang: Convert Image > Avif / Jpg > High Quality / Standard / Small Size')
+        print('Menu terpasang: Convert Image > Avif / Jpg / Pdf > High Quality / Standard / Small Size')
         print('Konfigurasi:', config)
         print('CLI:', launcher.with_name('convert-image'))
         print('Alias kompatibilitas:', launcher)
