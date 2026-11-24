@@ -16,12 +16,12 @@ class Img2AvifMenu(GObject.GObject, Nemo.MenuProvider):
         paths = []
         for item in files:
             path = Gio.File.new_for_uri(item.get_uri()).get_path()
-            if item.is_directory() or not path or Path(path).suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp"):
+            if item.is_directory() or not path or Path(path).suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp", ".avif"):
                 return []
             paths.append(path)
-        root = Nemo.MenuItem(name="ConvertImage::Root", label="Convert Image", tip="Konversi gambar ke AVIF, JPG, atau PDF", icon="image-x-generic")
+        root = Nemo.MenuItem(name="ConvertImage::Root", label="Convert Image", tip="Konversi gambar ke AVIF, JPG, PDF, PNG, atau WebP", icon="image-x-generic")
         menu = Nemo.Menu()
-        for output_format, format_label in (("avif", "Avif"), ("jpg", "Jpg"), ("pdf", "Pdf")):
+        for output_format, format_label in (("avif", "Avif"), ("jpg", "Jpg"), ("pdf", "Pdf"), ("png", "Png"), ("webp", "Webp")):
             format_item = Nemo.MenuItem(name="ConvertImage::" + output_format, label=format_label, tip="Konversi ke " + format_label)
             presets = Nemo.Menu()
             tips = {
@@ -31,6 +31,8 @@ class Img2AvifMenu(GObject.GObject, Nemo.MenuProvider):
                         "Maks. 1920 px, kualitas JPG 85", "Maks. 1280 px, kualitas JPG 70"),
                 "pdf": ("Satu gambar per PDF, resolusi asli, kualitas 95",
                         "Satu gambar per PDF, maks. 1920 px, kualitas 85", "Satu gambar per PDF, maks. 1280 px, kualitas 70"),
+                "png": ("Lossless 8-bit, resolusi asli", "Lossless setelah resize, maks. 1920 px", "Lossless setelah resize, maks. 1280 px"),
+                "webp": ("Lossless 8-bit, resolusi asli", "Maks. 1920 px, kualitas WebP 80", "Maks. 1280 px, kualitas WebP 60"),
             }
             for (mode, label), tip in zip((("high", "High Quality"), ("standard", "Standard"), ("small", "Small Size")), tips[output_format]):
                 child = Nemo.MenuItem(name="ConvertImage::" + output_format + "::" + mode, label=label, tip=tip)

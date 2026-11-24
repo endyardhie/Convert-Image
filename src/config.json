@@ -10,5 +10,7 @@
   "jpg_small_quality": 70,
   "pdf_high_quality": 95,
   "pdf_standard_quality": 85,
-  "pdf_small_quality": 70
+  "pdf_small_quality": 70,
+  "webp_standard_quality": 80,
+  "webp_small_quality": 60
 }

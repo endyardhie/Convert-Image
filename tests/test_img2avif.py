@@ -236,7 +236,7 @@ class JpegTests(unittest.TestCase):
 
 
 class MenuTests(unittest.TestCase):
-    def test_three_formats_three_presets_and_callback_arguments(self):
+    def test_five_formats_three_presets_and_callback_arguments(self):
         import types
         class Menu:
             def __init__(self): self.items = []
@@ -247,21 +247,21 @@ class MenuTests(unittest.TestCase):
             def connect(self, signal, callback, *args): self.activation = args
         class File:
             def is_directory(self): return False
-            def get_uri(self): return 'file:///tmp/test.jpg'
+            def get_uri(self): return 'file:///tmp/test.avif'
         gi = types.ModuleType('gi'); gi.require_version = lambda *args: None
         repository = types.ModuleType('gi.repository')
         repository.Nemo = types.SimpleNamespace(Menu=Menu, MenuItem=Item, MenuProvider=type('Provider', (), {}))
         repository.GObject = types.SimpleNamespace(GObject=type('GObject', (), {}))
-        repository.Gio = types.SimpleNamespace(File=types.SimpleNamespace(new_for_uri=lambda uri: types.SimpleNamespace(get_path=lambda: '/tmp/test.jpg')))
+        repository.Gio = types.SimpleNamespace(File=types.SimpleNamespace(new_for_uri=lambda uri: types.SimpleNamespace(get_path=lambda: '/tmp/test.avif')))
         with patch.dict('sys.modules', {'gi': gi, 'gi.repository': repository}):
             module = load('test_nemo_menu', ROOT / 'src/nemo_img2avif.py')
         root = module.Img2AvifMenu().get_file_items(None, [File()])[0]
         self.assertEqual(root.label, 'Convert Image')
-        self.assertEqual([x.label for x in root.submenu.items], ['Avif', 'Jpg', 'Pdf'])
-        for item, output_format in zip(root.submenu.items, ['avif', 'jpg', 'pdf']):
+        self.assertEqual([x.label for x in root.submenu.items], ['Avif', 'Jpg', 'Pdf', 'Png', 'Webp'])
+        for item, output_format in zip(root.submenu.items, ['avif', 'jpg', 'pdf', 'png', 'webp']):
             self.assertEqual([x.label for x in item.submenu.items], ['High Quality', 'Standard', 'Small Size'])
             for child, mode in zip(item.submenu.items, ['high', 'standard', 'small']):
-                self.assertEqual(child.activation, (output_format, mode, ('/tmp/test.jpg',)))
+                self.assertEqual(child.activation, (output_format, mode, ('/tmp/test.avif',)))
 
 if __name__ == '__main__':
     unittest.main()

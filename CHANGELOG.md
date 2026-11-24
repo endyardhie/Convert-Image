@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.2.0
+
+- Tambah input AVIF melalui avifdec dengan verifikasi jumlah frame dan kedalaman warna.
+- Tambah output PNG dan WebP untuk seluruh preset, termasuk konversi format yang sama.
+- PNG lossless level 9; WebP lossless High Quality dan lossy 80/60 untuk Standard/Small.
+- Pertahankan alpha/ICC dan verifikasi piksel lossless sebelum publikasi.
+- Menu menjadi lima format dengan 15 aksi. Tambah matriks tes 75 konversi dan dokumentasi.
+
 ## 2.1.0
 
 - Tambah submenu Pdf dengan High Quality, Standard, dan Small Size.

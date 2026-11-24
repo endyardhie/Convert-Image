@@ -5,6 +5,7 @@ import errno
 import io
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import signal
@@ -24,9 +25,10 @@ from PIL import Image, ImageOps, ImageCms
 DEFAULTS = {"speed": 0, "threads": 4, "standard_edge": 1920,
             "standard_quality": 60, "small_edge": 1280, "small_quality": 40, "jpg_high_quality": 95,
             "jpg_standard_quality": 85, "jpg_small_quality": 70,
-            "pdf_high_quality": 95, "pdf_standard_quality": 85, "pdf_small_quality": 70}
+            "pdf_high_quality": 95, "pdf_standard_quality": 85, "pdf_small_quality": 70,
+            "webp_standard_quality": 80, "webp_small_quality": 60}
 MODES = {"high": "High Quality", "standard": "Standard", "small": "Small Size"}
-EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".avif"}
 warnings.simplefilter("error", Image.DecompressionBombWarning)
 
 
@@ -48,7 +50,8 @@ def settings():
     limits = {"speed": (0, 10), "threads": (1, 64), "standard_edge": (1, 16384),
               "small_edge": (1, 16384), "standard_quality": (1, 99), "small_quality": (1, 99), "jpg_high_quality": (1, 95),
               "jpg_standard_quality": (1, 95), "jpg_small_quality": (1, 95), "pdf_high_quality": (1, 95),
-              "pdf_standard_quality": (1, 95), "pdf_small_quality": (1, 95)}
+              "pdf_standard_quality": (1, 95), "pdf_small_quality": (1, 95), "webp_standard_quality": (1, 100),
+              "webp_small_quality": (1, 100)}
     for key, (low, high) in limits.items():
         value = result[key]
         if type(value) is not int or not low <= value <= high:
@@ -120,14 +123,14 @@ def prepare(source, mode, cfg, output_format="avif"):
     with source.open("rb") as stream:
         header = stream.read(29)
     # Pillow otherwise silently reduces RGB/RGBA 16-bit PNGs to 8-bit.
-    if output_format == "avif" and mode == "high" and header[:8] == b"\x89PNG\r\n\x1a\n" and len(header) > 24 and header[24] > 8:
+    if output_format in ("avif", "png", "webp") and mode == "high" and header[:8] == b"\x89PNG\r\n\x1a\n" and len(header) > 24 and header[24] > 8:
         raise ValueError("PNG 16-bit: High Quality dilewati agar tidak menurunkan kedalaman warna")
     with Image.open(source) as original:
         if original.format not in ("JPEG", "PNG", "WEBP"):
             raise ValueError("Isi file bukan JPEG, PNG, atau WebP")
         if getattr(original, "n_frames", 1) != 1:
             raise ValueError("Animasi dilewati; skrip ini untuk gambar diam")
-        if output_format == "avif" and mode == "high" and original.mode not in ("1", "L", "LA", "P", "RGB", "RGBA"):
+        if output_format in ("avif", "png", "webp") and mode == "high" and original.mode not in ("1", "L", "LA", "P", "RGB", "RGBA"):
             raise ValueError("High Quality memerlukan gambar RGB/grayscale 8-bit; mode " + original.mode + " dilewati")
         image = ImageOps.exif_transpose(original)
         profile = original.info.get("icc_profile")
@@ -237,14 +240,51 @@ def encode_pdf(image, encoded, mode, cfg, progress):
 
 
 def convert(source, mode, cfg, modern, progress, log, output_format="avif"):
-    if output_format not in ("avif", "jpg", "pdf"):
+    if output_format not in ("avif", "jpg", "pdf", "png", "webp"):
         raise ValueError("Format output tidak didukung")
     if source.suffix.lower() not in EXTENSIONS or not source.is_file():
         raise ValueError("File tidak didukung atau tidak ditemukan")
-    image = prepare(source, mode, cfg, output_format)
     with tempfile.TemporaryDirectory(prefix=".img2avif-", dir=source.parent) as scratch:
         temp = Path(scratch)
+        input_source = source
+        if source.suffix.lower() == ".avif":
+            # Use libavif even on systems whose Pillow has no AVIF plugin.
+            info = temp / "avif-info.txt"
+            with info.open("w") as metadata:
+                run(["avifdec", "--info", str(source)], progress, metadata)
+            report = info.read_text()
+            log.write(report)
+            frames = re.findall(r"^\s*\*\s+\d+ timescales per second.*?,\s*(\d+) frames?\s*$", report, re.MULTILINE)
+            depth = re.findall(r"^\s*\*\s+Bit Depth\s*:\s*(\d+)\s*$", report, re.MULTILINE)
+            if not frames or not depth:
+                raise ValueError("Tidak dapat memverifikasi metadata AVIF")
+            if int(frames[-1]) != 1:
+                raise ValueError("Animasi AVIF dilewati; skrip ini untuk gambar diam")
+            if int(depth[-1]) > 8 and mode == "high" and output_format in ("avif", "png", "webp"):
+                raise ValueError("AVIF di atas 8-bit dilewati pada High Quality lossless")
+            input_source = temp / "decoded-input.png"
+            run(["avifdec", "--depth", "8", str(source), str(input_source)], progress, log)
+        image = prepare(input_source, mode, cfg, output_format)
         png, encoded, decoded = temp / "input.png", temp / ("output." + output_format), temp / "check.png"
+        if output_format in ("png", "webp"):
+            progress.update("Encoding " + output_format.upper() + ": " + source.name)
+            if output_format == "png":
+                image.save(encoded, format="PNG", optimize=True, compress_level=9)
+            else:
+                if max(image.size) > 16383:
+                    raise ValueError("WebP maksimum 16383 piksel per sisi; pilih Standard atau Small Size")
+                image.save(encoded, format="WEBP", lossless=mode == "high",
+                           quality=100 if mode == "high" else cfg["webp_" + mode + "_quality"],
+                           method=6, exact=True, icc_profile=image.info.get("icc_profile", b""))
+            progress.check()
+            with Image.open(encoded) as check:
+                check.load()
+                if check.format != output_format.upper() or check.size != image.size:
+                    raise RuntimeError("Verifikasi format/dimensi gagal")
+                if (output_format == "png" or mode == "high") and check.convert("RGBA").tobytes() != image.convert("RGBA").tobytes():
+                    raise RuntimeError("Verifikasi lossless gagal: piksel berubah; hasil tidak disimpan")
+            progress.check()
+            return publish(encoded, source, mode, output_format), image.size
         if output_format in ("jpg", "pdf"):
             # JPEG has no alpha channel; composite on white instead of discarding alpha.
             profile = image.info.get("icc_profile")
@@ -298,7 +338,7 @@ def main():
         finally:
             request.unlink(missing_ok=True)
     parser = argparse.ArgumentParser(description="Convert Image untuk Nemo")
-    parser.add_argument("--format", choices=("avif", "jpg", "pdf"), default="avif", dest="output_format")
+    parser.add_argument("--format", choices=("avif", "jpg", "pdf", "png", "webp"), default="avif", dest="output_format")
     parser.add_argument("mode", choices=MODES)
     parser.add_argument("--no-gui", action="store_true")
     parser.add_argument("files", nargs="+")
@@ -306,6 +346,8 @@ def main():
     progress = None
     try:
         required = (["avifenc", "avifdec"] if args.output_format == "avif" else []) + ([] if args.no_gui else ["zenity"])
+        if any(Path(filename).suffix.lower() == ".avif" for filename in args.files) and "avifdec" not in required:
+            required.append("avifdec")
         for tool in required:
             if not shutil.which(tool):
                 raise RuntimeError("Program belum terpasang: " + tool)
