@@ -63,12 +63,20 @@ def process_options():
     return {"creationflags": subprocess.CREATE_NO_WINDOW} if windows() else {}
 
 
+def window_icon(window):
+    bundle = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+    icon = bundle / "app.ico"
+    if icon.is_file():
+        window.iconbitmap(str(icon))
+
+
 def message(text, error=False):
     if windows():
         import tkinter as tk
         from tkinter import messagebox
         root = tk.Tk()
         root.withdraw()
+        window_icon(root)
         try:
             (messagebox.showerror if error else messagebox.showinfo)("Convert Image", text, parent=root)
         finally:
@@ -109,8 +117,9 @@ class Progress:
             from tkinter import ttk
             self.window = tk.Tk()
             self.window.title("Convert Image — " + output_format.upper())
-            self.window.geometry("560x210")
+            self.window.geometry("560x300")
             self.window.resizable(False, False)
+            window_icon(self.window)
             self.window.configure(background="#f1faf6")
             self.window.protocol("WM_DELETE_WINDOW", self.cancel)
             frame = ttk.Frame(self.window, padding=24)

@@ -67,7 +67,8 @@ def registry_value(key):
 
 
 with tempfile.TemporaryDirectory(prefix='convert-image-windows-') as temp:
-    folder = Path(temp)
+    folder = Path(temp) / 'Gambar 日本語 ü'
+    folder.mkdir()
     installer = next((ROOT / 'dist').glob('*-Setup.exe'))
     # Install in a path with spaces and Unicode, as a regular per-user app.
     install = folder / 'Aplikasi ü' / 'Convert Image'

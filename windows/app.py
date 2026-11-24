@@ -12,6 +12,7 @@ def choose_images():
 
     root = tk.Tk()
     root.withdraw()
+    convert.window_icon(root)
     files = filedialog.askopenfilenames(
         parent=root, title="Pilih gambar — Convert Image",
         filetypes=[("Gambar", "*.jpg *.jpeg *.png *.webp *.avif")])
@@ -20,7 +21,7 @@ def choose_images():
         return False
     root.deiconify()
     root.title("Convert Image")
-    root.geometry("430x270")
+    root.geometry("460x360")
     root.resizable(False, False)
     frame = ttk.Frame(root, padding=24)
     frame.pack(fill="both", expand=True)

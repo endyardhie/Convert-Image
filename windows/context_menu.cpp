@@ -184,13 +184,13 @@ public:
     HRESULT STDMETHODCALLTYPE LockServer(BOOL lock) override { if (lock) ++objects; else --objects; return S_OK; }
 };
 
-extern "C" __declspec(dllexport) HRESULT __stdcall DllGetClassObject(REFCLSID clsid, REFIID iid, void** out) {
+STDAPI DllGetClassObject(REFCLSID clsid, REFIID iid, void** out) {
     if (clsid != CLSID_ConvertImage) return CLASS_E_CLASSNOTAVAILABLE;
     auto factory = new(std::nothrow) Factory();
     if (!factory) return E_OUTOFMEMORY;
     HRESULT hr = factory->QueryInterface(iid, out); factory->Release(); return hr;
 }
-extern "C" __declspec(dllexport) HRESULT __stdcall DllCanUnloadNow() { return objects == 0 ? S_OK : S_FALSE; }
+STDAPI DllCanUnloadNow() { return objects == 0 ? S_OK : S_FALSE; }
 BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
     if (reason == DLL_PROCESS_ATTACH) { moduleHandle = instance; DisableThreadLibraryCalls(instance); }
     return TRUE;
