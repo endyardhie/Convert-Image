@@ -1,10 +1,23 @@
+#ifndef AppVersion
 #define AppVersion "3.0.0"
+#endif
+#ifndef AppFileVersion
+#define AppFileVersion "3.0.0.0"
+#endif
 #define AppId "{{2B414F21-4B8D-4DB6-9E69-7EE68D08C822}"
 
 [Setup]
 AppId={{2B414F21-4B8D-4DB6-9E69-7EE68D08C822}
 AppName=Convert Image
 AppVersion={#AppVersion}
+VersionInfoCompany=Endy Ardhie
+VersionInfoProductName=Convert Image
+VersionInfoProductVersion={#AppFileVersion}
+VersionInfoProductTextVersion={#AppVersion}
+VersionInfoVersion={#AppFileVersion}
+VersionInfoTextVersion={#AppFileVersion}
+VersionInfoDescription=Convert Image Setup
+VersionInfoCopyright=Copyright (c) 2026 Endy Ardhie
 AppPublisher=Endy Ardhie
 AppPublisherURL=https://github.com/endyardhie/Convert-Image
 AppSupportURL=https://github.com/endyardhie/Convert-Image/issues

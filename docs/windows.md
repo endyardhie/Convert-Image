@@ -54,9 +54,14 @@ konversi melalui protokol batch, memeriksa 15 aksi menu native dan aktivasi COM,
 kemudian memeriksa pembaruan tanpa menimpa pengaturan serta uninstall tanpa
 menghapus hasil gambar.
 
-Pengujian otomatis tidak menggantikan pemeriksaan tampilan menu pada desktop
-Windows 10/11. Rilis awal diberi label **pratinjau** sampai verifikasi desktop
-selesai. Installer belum memakai tanda tangan digital.
+Pada 25 November 2026, pemilik proyek melaporkan bahwa aplikasi sudah dicoba
+langsung di Windows dan semua berjalan normal. Rilis awal tetap berlabel
+**pratinjau**; installer yang tersedia belum memakai tanda tangan digital.
+
+Metadata aplikasi, DLL, dan installer kini menggunakan `windows/version.json`.
+Build memeriksa nama produk dan versi sebelum paket dibagikan. Persiapan
+penandatanganan dijelaskan di [panduan SignPath](signpath.md), dengan kebijakan
+publik pada [Code signing policy](../CODE_SIGNING.md).
 
 Referensi: [integrasi menu klasik Microsoft](https://learn.microsoft.com/en-us/windows/win32/shell/context-menu-handlers),
 [pengemasan PyInstaller](https://pyinstaller.org/en/stable/operating-mode.html).

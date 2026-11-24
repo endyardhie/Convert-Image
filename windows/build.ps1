@@ -1,3 +1,4 @@
+param([switch]$SkipInstaller)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
@@ -21,15 +22,17 @@ if ($LASTEXITCODE -ne 0) { throw 'Pemasangan dependensi build gagal' }
 python -m unittest discover -s tests -v
 if ($LASTEXITCODE -ne 0) { throw 'Pengujian gagal' }
 
+python windows/write_version_info.py
+if ($LASTEXITCODE -ne 0) { throw 'Pembuatan metadata versi gagal' }
 python -c "from PIL import Image; Image.open('assets/branding/logo.png').save('assets/branding/app.ico',sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])"
-python -m PyInstaller --noconfirm --clean --windowed --onedir --name ConvertImage --paths src --icon assets/branding/app.ico --add-data "assets/branding/app.ico;." --add-binary "$tools/avifenc.exe;tools" --add-binary "$tools/avifdec.exe;tools" --add-binary "$tools/*.dll;tools" --hidden-import PIL.ImageCms --collect-all reportlab --collect-all pypdf --copy-metadata Pillow --copy-metadata reportlab --copy-metadata pypdf windows/app.py
+python -m PyInstaller --noconfirm --clean --windowed --onedir --name ConvertImage --paths src --icon assets/branding/app.ico --version-file build/version/app-version.txt --add-data "assets/branding/app.ico;." --add-binary "$tools/avifenc.exe;tools" --add-binary "$tools/avifdec.exe;tools" --add-binary "$tools/*.dll;tools" --hidden-import PIL.ImageCms --collect-all reportlab --collect-all pypdf --copy-metadata Pillow --copy-metadata reportlab --copy-metadata pypdf windows/app.py
 if ($LASTEXITCODE -ne 0) { throw 'Build aplikasi gagal' }
 
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $vs = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 if (-not $vs) { throw 'Visual C++ Build Tools tidak ditemukan' }
 $vcvars = Join-Path $vs 'VC/Auxiliary/Build/vcvars64.bat'
-cmd /c "`"$vcvars`" && cl /nologo /std:c++17 /EHsc /O2 /MT /utf-8 /LD windows\context_menu.cpp /Fe:dist\ConvertImage\ConvertImageShell.dll /link /DEF:windows\context_menu.def shell32.lib ole32.lib uuid.lib user32.lib"
+cmd /c "`"$vcvars`" && rc /nologo /fobuild\version\shell-version.res build\version\shell-version.rc && cl /nologo /std:c++17 /EHsc /O2 /MT /utf-8 /LD windows\context_menu.cpp /Fe:dist\ConvertImage\ConvertImageShell.dll /link /DEF:windows\context_menu.def build\version\shell-version.res shell32.lib ole32.lib uuid.lib user32.lib"
 if ($LASTEXITCODE -ne 0) { throw 'Build ekstensi File Explorer gagal' }
 cmd /c "`"$vcvars`" && cl /nologo /std:c++17 /EHsc /O2 /MT /utf-8 /DCONVERT_IMAGE_TEST windows\context_menu.cpp /Fe:build\shell-test.exe /link shell32.lib ole32.lib uuid.lib user32.lib"
 if ($LASTEXITCODE -ne 0) { throw 'Build pengujian ekstensi gagal' }
@@ -60,9 +63,6 @@ foreach ($entry in $licenses.GetEnumerator()) {
 python windows/collect_licenses.py
 if ($LASTEXITCODE -ne 0) { throw 'Pengumpulan lisensi gagal' }
 
-$iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-if (-not (Test-Path $iscc)) { throw 'Inno Setup 6 tidak ditemukan' }
-& $iscc windows/installer.iss
-if ($LASTEXITCODE -ne 0) { throw 'Build installer gagal' }
-python windows/smoke_test.py
-if ($LASTEXITCODE -ne 0) { throw 'Pengujian installer gagal' }
+if (-not $SkipInstaller) {
+    & ./windows/package.ps1
+}

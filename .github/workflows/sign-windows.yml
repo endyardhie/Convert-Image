@@ -1,0 +1,128 @@
+name: Sign Windows release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: sign-windows-release
+  cancel-in-progress: false
+
+jobs:
+  signing:
+    runs-on: windows-2022
+    timeout-minutes: 120
+    env:
+      SIGNPATH_ENABLED: ${{ vars.SIGNPATH_ENABLED }}
+      SIGNPATH_ORGANIZATION_ID: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+      SIGNPATH_PROJECT_SLUG: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+      SIGNPATH_POLICY_SLUG: ${{ vars.SIGNPATH_POLICY_SLUG }}
+      SIGNPATH_APPLICATION_CONFIG: ${{ vars.SIGNPATH_APPLICATION_CONFIG }}
+      SIGNPATH_INSTALLER_CONFIG: ${{ vars.SIGNPATH_INSTALLER_CONFIG }}
+    steps:
+      - name: Check signing configuration
+        shell: pwsh
+        env:
+          SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+        run: |
+          if ($env:GITHUB_REF -ne 'refs/heads/main') { throw 'Signing is restricted to main.' }
+          if ($env:SIGNPATH_ENABLED -ne 'true') { throw 'SignPath is not enabled. Complete Foundation approval first.' }
+          foreach ($name in @('SIGNPATH_ORGANIZATION_ID','SIGNPATH_PROJECT_SLUG','SIGNPATH_POLICY_SLUG','SIGNPATH_APPLICATION_CONFIG','SIGNPATH_INSTALLER_CONFIG','SIGNPATH_API_TOKEN')) {
+            if (-not [Environment]::GetEnvironmentVariable($name)) { throw "Missing setting: $name" }
+          }
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - name: Build and test unsigned package
+        shell: pwsh
+        run: ./windows/build.ps1
+      - name: Read product version
+        id: version
+        shell: pwsh
+        run: |
+          $v = Get-Content windows/version.json -Raw | ConvertFrom-Json
+          "version=$($v.version)" >> $env:GITHUB_OUTPUT
+          "file-version=$($v.file_version)" >> $env:GITHUB_OUTPUT
+
+      - name: Upload application for origin verification
+        id: application
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Convert-Image-application-unsigned
+          path: dist/ConvertImage/
+          if-no-files-found: error
+
+      - name: Request application signatures (manual approval in SignPath)
+        uses: signpath/github-action-submit-signing-request@a2c5b60d9c75f073142b653c354b632eedce097b # v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_APPLICATION_CONFIG }}
+          github-artifact-id: ${{ steps.application.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 1800
+          output-artifact-directory: dist/application-signed
+          parameters: |
+            version: ${{ toJSON(steps.version.outputs.version) }}
+            fileVersion: ${{ toJSON(steps.version.outputs.file-version) }}
+
+      - name: Package signed application and test installation
+        shell: pwsh
+        run: |
+          ./windows/verify-signatures.ps1 -Directory dist/application-signed
+          Remove-Item dist/ConvertImage -Recurse -Force
+          Move-Item dist/application-signed dist/ConvertImage
+          ./windows/package.ps1 -RequireSignedPayload
+
+      - name: Upload installer for origin verification
+        id: installer
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Convert-Image-installer-unsigned
+          path: dist/*-Setup.exe
+          if-no-files-found: error
+
+      - name: Request installer signature (manual approval in SignPath)
+        uses: signpath/github-action-submit-signing-request@a2c5b60d9c75f073142b653c354b632eedce097b # v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_INSTALLER_CONFIG }}
+          github-artifact-id: ${{ steps.installer.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 1800
+          output-artifact-directory: dist/installer-signed
+          parameters: |
+            version: ${{ toJSON(steps.version.outputs.version) }}
+            fileVersion: ${{ toJSON(steps.version.outputs.file-version) }}
+
+      - name: Verify and test final signed installer
+        shell: pwsh
+        run: |
+          $v = Get-Content windows/version.json -Raw | ConvertFrom-Json
+          $name = "Convert-Image-$($v.version)-Windows-x64-Setup.exe"
+          $installer = Join-Path dist/installer-signed $name
+          ./windows/verify-signatures.ps1 -Directory dist/ConvertImage -InstallerPath $installer -ReportPath dist/installer-signed/signatures.json
+          Copy-Item $installer (Join-Path dist $name) -Force
+          $env:CONVERT_IMAGE_REQUIRE_SIGNED = '1'
+          python windows/smoke_test.py
+          if ($LASTEXITCODE -ne 0) { throw 'Signed installer test failed.' }
+          $hash = (Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $name" | Set-Content dist/installer-signed/SHA256SUMS.txt -Encoding utf8
+
+      - name: Upload verified signed installer for maintainer review
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Convert-Image-Windows-signed
+          path: dist/installer-signed/
+          if-no-files-found: error

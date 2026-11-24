@@ -75,6 +75,8 @@ with tempfile.TemporaryDirectory(prefix='convert-image-windows-') as temp:
     execute([installer, '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/DIR=' + str(install), '/LOG=' + str(folder / 'install.log')])
     app = install / 'ConvertImage.exe'
     assert app.is_file()
+    if os.environ.get('CONVERT_IMAGE_REQUIRE_SIGNED') == '1':
+        execute(['powershell.exe', '-NoProfile', '-File', ROOT / 'windows/verify-signatures.ps1', '-Directory', install])
     for ext in ('jpg', 'jpeg', 'png', 'webp', 'avif'):
         assert registry_value(r'Software\Classes\SystemFileAssociations\.' + ext + r'\shellex\ContextMenuHandlers\ConvertImage') == CLSID
     assert registry_value('Software\\Classes\\CLSID\\' + CLSID + r'\InprocServer32') == str(install / 'ConvertImageShell.dll')

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <parameters>
+    <parameter name="version" required="true" />
+    <parameter name="fileVersion" required="true" />
+  </parameters>
+  <zip-file>
+    <pe-file path="ConvertImage.exe" product-name="Convert Image"
+             product-version="${version}" file-version="${fileVersion}"
+             company-name="Endy Ardhie" original-filename="ConvertImage.exe">
+      <authenticode-sign />
+    </pe-file>
+    <pe-file path="ConvertImageShell.dll" product-name="Convert Image"
+             product-version="${version}" file-version="${fileVersion}"
+             company-name="Endy Ardhie" original-filename="ConvertImageShell.dll">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

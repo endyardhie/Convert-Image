@@ -59,7 +59,7 @@ Ditujukan terutama untuk **Linux Mint 22.x Cinnamon**. Ubuntu dan Debian memerlu
 3. Pilih gambar di File Explorer, lalu klik kanan → **Convert Image**.
 4. Pada **Windows 11**, buka **Show more options / Tampilkan opsi lainnya** terlebih dahulu jika menu belum terlihat. Anda juga bisa membuka **Convert Image** dari menu **Start** untuk memilih beberapa gambar sekaligus.
 
-Versi Windows merupakan **rilis pratinjau** untuk komputer x64. Pengujian otomatis mencakup konversi, menu, pemasangan, pembaruan, dan penghapusan; tampilan menu pada desktop Windows Anda masih perlu dicoba. Installer belum ditandatangani secara digital, sehingga Windows dapat menampilkan pemberitahuan penerbit tidak dikenal. Build ini belum ditujukan untuk Windows ARM64 atau 32-bit.
+Versi Windows merupakan **rilis pratinjau** untuk komputer x64. Pengujian otomatis mencakup konversi, menu, pemasangan, pembaruan, dan penghapusan. Pemilik proyek juga sudah mencoba aplikasi di Windows dan melaporkan semua berjalan normal. Installer saat ini belum ditandatangani secara digital, sehingga Windows dapat menampilkan pemberitahuan penerbit tidak dikenal. Build ini belum ditujukan untuk Windows ARM64 atau 32-bit.
 
 ## Cara menggunakan
 
@@ -184,3 +184,7 @@ Periksa koneksi internet dan pesan di terminal. Jangan lanjutkan memakai aplikas
 ## Lisensi
 
 Gratis digunakan dan dimodifikasi sesuai **[MIT License](LICENSE)**, termasuk untuk kebutuhan komersial, dengan menyertakan pemberitahuan hak cipta dan lisensi.
+
+## Code signing policy
+
+Kami sedang menyiapkan pengajuan penandatanganan gratis melalui **SignPath Foundation**. Unduhan Windows saat ini masih **belum ditandatangani**. Informasi penerbit, proses rilis, dan privasi tersedia pada **[Code signing policy](CODE_SIGNING.md)**.
