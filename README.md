@@ -1,264 +1,159 @@
-# Nemo Convert Image
+<h1 align="center">Nemo Convert Image</h1>
 
-Konversi **JPG/JPEG, WebP, AVIF, dan PNG** ke **AVIF, JPG, PDF, PNG, atau WebP** melalui menu klik kanan **Nemo**. Dibuat untuk Linux Mint Cinnamon, dengan tiga preset per format, pemrosesan banyak file, dan installer untuk pengguna desktop.
+<p align="center"><strong>Ubah format gambar langsung dari menu klik kanan.</strong></p>
+
+<p align="center">Pilih gambar. Tentukan format. Hasil langsung tersimpan.</p>
+
+<p align="center">
+  <a href="https://raw.githubusercontent.com/endyardhie/Nemo-Convert-Image/main/install-image.sh"><strong>Unduh installer</strong></a> ·
+  <a href="#cara-memasang">Panduan pemasangan</a> ·
+  <a href="#cara-menggunakan">Cara menggunakan</a> ·
+  <a href="#pertanyaan-umum">Pertanyaan umum</a>
+</p>
+
+---
+
+**Nemo Convert Image** membantu Anda menyiapkan foto untuk dibagikan, mengubah gambar untuk website, atau menyimpan gambar sebagai PDF. Semuanya dilakukan melalui **Nemo**, pengelola file pada Linux Mint Cinnamon.
+
+Tidak perlu mengunggah gambar ke layanan online atau membuka aplikasi editor. Anda bisa memilih satu gambar maupun banyak gambar sekaligus. **File asli tetap tersimpan; hasil konversi dibuat sebagai file baru.**
+
+| Gambar yang bisa dibuka | Pilihan hasil |
+| --- | --- |
+| JPG/JPEG, PNG, WebP, AVIF | AVIF, JPG, PDF, PNG, WebP |
+
+## Cara memasang
+
+Ditujukan untuk **Linux Mint 22.x Cinnamon dengan pengelola file Nemo**. Koneksi internet diperlukan saat pemasangan untuk mengunduh perlengkapan aplikasi yang belum tersedia.
+
+1. **[Unduh installer](https://raw.githubusercontent.com/endyardhie/Nemo-Convert-Image/main/install-image.sh)** dan simpan dengan nama `install-image.sh`. Jika browser menampilkan isi script, simpan halaman tersebut sebagai file dengan nama yang sama.
+2. Buka folder tempat Anda menyimpannya, lalu pilih **Buka di Terminal / Open in Terminal** dari menu klik kanan pada area kosong folder.
+3. Salin dan jalankan perintah berikut:
+
+   ```bash
+   bash install-image.sh
+   ```
+
+4. Ikuti petunjuk di terminal sampai selesai. Jika diminta, masukkan password akun Linux Anda untuk memasang paket yang diperlukan. **Jalankan installer sebagai pengguna biasa, tanpa menambahkan `sudo` di depan perintah.**
+5. Selesaikan aktivitas salin/pindah file yang sedang berjalan, lalu mulai ulang Nemo:
+
+   ```bash
+   nemo -q
+   ```
+
+6. Buka kembali pengelola file. Menu **Convert Image** siap digunakan saat Anda memilih gambar yang didukung.
+
+## Cara menggunakan
+
+1. **Pilih gambar.** Buka folder gambar, lalu pilih satu atau beberapa file. Gunakan `Ctrl` sambil mengeklik untuk memilih beberapa gambar.
+2. **Klik kanan → Convert Image.** Pilih format hasil: **Avif**, **Jpg**, **Pdf**, **Png**, atau **Webp**.
+3. **Pilih kualitas.** Gunakan **High Quality**, **Standard**, atau **Small Size** sesuai kebutuhan.
+4. **Tunggu sampai selesai.** Jendela proses menampilkan gambar yang sedang dikerjakan. Setelah selesai, Anda akan melihat ringkasan hasilnya.
+
+> **Mulai dari sini:** untuk penggunaan sehari-hari, coba **Jpg → Standard**. Untuk gambar website yang perlu latar transparan, coba **Webp → Standard**.
+
+## Pilih format yang sesuai
+
+| Format | Cocok untuk | Yang perlu diketahui |
+| --- | --- | --- |
+| **Avif** | Gambar website atau foto saat ingin mencoba kompresi yang lebih hemat | Prosesnya dapat lebih lama. Pastikan aplikasi atau website tujuan mendukung AVIF. |
+| **Jpg** | Foto untuk dibagikan atau digunakan di aplikasi yang menerima JPG | Area transparan akan menjadi putih. |
+| **Pdf** | Mengirim gambar sebagai dokumen | Satu gambar menjadi satu PDF satu halaman. Beberapa gambar menghasilkan beberapa PDF terpisah. |
+| **Png** | Logo, ilustrasi, atau gambar yang membutuhkan latar transparan | Ukuran file bisa lebih besar daripada format lain. |
+| **Webp** | Foto dan gambar website, termasuk gambar berlatar transparan | Pastikan aplikasi atau website tujuan menerima WebP. |
+
+Anda juga dapat memilih **format yang sama dengan file asal**, misalnya JPG → JPG atau PNG → PNG, untuk mencoba ukuran dan pengaturan hasil yang berbeda.
+
+## Pilih kualitasnya
+
+| Pilihan | Gunakan ketika… | Ukuran gambar |
+| --- | --- | --- |
+| **High Quality** | Detail gambar lebih penting daripada ukuran file | Mempertahankan resolusi asli. |
+| **Standard** | Anda menginginkan pilihan seimbang untuk pemakaian sehari-hari | Sisi terpanjang maksimal **1920 piksel**. |
+| **Small Size** | Anda membutuhkan gambar beresolusi lebih kecil untuk dibagikan atau diunggah | Sisi terpanjang maksimal **1280 piksel**. |
+
+Rasio gambar tetap dijaga, gambar tidak dipotong, dan gambar kecil tidak diperbesar. Untuk PNG, Standard dan Small Size terutama berbeda pada ukuran resolusinya.
+
+**Hasil tidak selalu lebih kecil daripada file asal.** Ukurannya bergantung pada isi gambar, format, dan kualitas yang dipilih. High Quality juga tidak dapat mengembalikan detail yang sudah buram atau hilang pada gambar asal. JPG dan gambar di dalam PDF tetap memakai kompresi yang dapat mengurangi detail, termasuk pada High Quality.
+
+## Menemukan hasil konversi
+
+Hasil tersimpan **di folder yang sama dengan gambar asal**, dengan nama yang menunjukkan kualitas pilihan Anda:
 
 ```text
-Klik kanan → Convert Image
-              ├── Avif
-              │   ├── High Quality
-              │   ├── Standard
-              │   └── Small Size
-              ├── Jpg
-              │   ├── High Quality
-              │   ├── Standard
-              │   └── Small Size
-              ├── Pdf
-              │   ├── High Quality
-              │   ├── Standard
-              │   └── Small Size
-              ├── Png
-              │   ├── High Quality
-              │   ├── Standard
-              │   └── Small Size
-              └── Webp
-                  ├── High Quality
-                  ├── Standard
-                  └── Small Size
+liburan.jpg                 ← gambar asli
+liburan-standard.webp       ← hasil Webp, kualitas Standard
+liburan-small.jpg           ← hasil Jpg, kualitas Small Size
+liburan-high.pdf            ← hasil Pdf, kualitas High Quality
 ```
 
-Konversi antar semua format gambar di atas didukung, termasuk format yang sama (AVIF → AVIF, JPG/JPEG → JPG, PNG → PNG, WebP → WebP). JPG/JPEG dapat dikonversi ulang ke JPG untuk mencoba kompresi atau ukuran yang berbeda. Hasil selalu menjadi file baru; ukuran yang lebih kecil tidak dijamin.
+Jika nama hasil sudah dipakai, aplikasi menambahkan nomor, misalnya `liburan-standard-1.webp`. File sebelumnya tetap aman.
 
-## Pilihan kualitas
+Anda bisa membatalkan proses dari jendela konversi. Hasil yang sudah selesai tetap tersimpan. Pada beberapa format, pembatalan baru diterapkan setelah gambar yang sedang dikerjakan selesai diproses, sehingga mungkin tidak langsung berhenti.
 
-### Avif
+## Memperbarui atau menghapus aplikasi
 
-| Preset | Resolusi | Encoding |
-| --- | --- | --- |
-| **High Quality** | Resolusi asli | Lossless RGB/grayscale 8-bit, 4:4:4; piksel hasil decode dibandingkan sebelum disimpan |
-| **Standard** | Sisi terpanjang maksimal **1920 px** | Lossy, kualitas **60**, 4:2:0 |
-| **Small Size** | Sisi terpanjang maksimal **1280 px** | Lossy, kualitas **40**, 4:2:0 |
+### Memperbarui
 
-Rasio gambar dipertahankan dan gambar kecil tidak diperbesar. Semua preset AVIF memakai **libaom, speed 0**, untuk mengutamakan kompresi dengan waktu encoding paling lambat. Maksimal 4 thread digunakan secara default. Ukuran akhir bergantung pada isi gambar; tidak ada target ukuran file yang dijamin.
+Unduh kembali **[installer terbaru](https://raw.githubusercontent.com/endyardhie/Nemo-Convert-Image/main/install-image.sh)**, lalu ulangi langkah pemasangan. Pengaturan Anda tetap dipertahankan. Mulai ulang Nemo setelah selesai.
 
-**Lossless dapat menghasilkan file lebih besar daripada JPEG atau WebP asal.** Lossless berarti piksel gambar 8-bit yang sudah didekode dan disesuaikan orientasinya tetap sama. Ini tidak mengembalikan detail yang sudah hilang pada JPEG/WebP lossy, dan bukan salinan identik seluruh metadata file asli.
+### Menghapus
 
-### Jpg
-
-| Preset | Resolusi | Encoding |
-| --- | --- | --- |
-| **High Quality** | Resolusi asli | JPEG kualitas **95**, 4:4:4 |
-| **Standard** | Sisi terpanjang maksimal **1920 px** | JPEG kualitas **85**, 4:2:0 |
-| **Small Size** | Sisi terpanjang maksimal **1280 px** | JPEG kualitas **70**, 4:2:0 |
-
-Semua preset JPG memakai encoding **lossy**, `optimize` dan progressive JPEG dari Pillow. JPG tidak mendukung transparansi: area transparan dikompositkan pada latar putih. Profil ICC diteruskan; orientasi EXIF diterapkan, metadata EXIF/XMP tidak disalin. Resolusi tidak diperbesar. Re-encode JPG dapat mengurangi kualitas dan dapat menghasilkan file yang lebih besar, terutama pada High Quality.
-
-### Pdf
-
-Satu gambar menghasilkan **satu file PDF satu halaman**, bukan menggabungkan batch ke satu dokumen. Input berupa JPG/JPEG, PNG, WebP, atau AVIF; aplikasi ini tidak mengonversi dokumen PDF sebagai input.
-
-| Preset | Resolusi gambar di PDF | Kompresi gambar |
-| --- | --- | --- |
-| **High Quality** | Resolusi asli | JPEG kualitas **95**, 4:4:4 |
-| **Standard** | Sisi terpanjang maksimal **1920 px** | JPEG kualitas **85**, 4:2:0 |
-| **Small Size** | Sisi terpanjang maksimal **1280 px** | JPEG kualitas **70**, 4:2:0 |
-
-PDF mengikuti rasio gambar, tanpa crop atau margin tambahan, dengan ukuran halaman nominal 96 dpi (halaman sangat panjang dibatasi sambil menjaga rasio). Area transparan memakai latar putih; orientasi EXIF diterapkan dan gambar dengan profil ICC dinormalisasi ke sRGB. Gambar di dalam PDF memakai kompresi lossy, termasuk High Quality. PDF ini berupa gambar, tanpa OCR atau teks yang dapat dipilih. Ukuran file akhir tidak dijamin lebih kecil.
-
-PDF dibuat menggunakan ReportLab dan diperiksa ulang menggunakan pypdf: jumlah halaman, ukuran halaman, dimensi gambar, dan kemampuan decode gambar di dalamnya diperiksa sebelum file dipublikasikan.
-
-### Png
-
-| Preset | Resolusi | Encoding |
-| --- | --- | --- |
-| **High Quality** | Resolusi asli | PNG lossless 8-bit, kompresi maksimum |
-| **Standard** | Sisi terpanjang maksimal **1920 px** | PNG lossless setelah resize |
-| **Small Size** | Sisi terpanjang maksimal **1280 px** | PNG lossless setelah resize |
-
-Semua preset memakai `optimize` dan kompresi level 9, tanpa pengurangan palet warna. Perbedaan kualitas Standard/Small terletak pada resolusi: encoding PNG mempertahankan piksel hasil resize. Transparansi dan profil ICC dipertahankan. PNG dapat jauh lebih besar daripada JPG, AVIF, atau WebP.
-
-### Webp
-
-| Preset | Resolusi | Encoding |
-| --- | --- | --- |
-| **High Quality** | Resolusi asli | WebP lossless 8-bit, method 6, exact alpha |
-| **Standard** | Sisi terpanjang maksimal **1920 px** | WebP lossy kualitas **80**, method 6 |
-| **Small Size** | Sisi terpanjang maksimal **1280 px** | WebP lossy kualitas **60**, method 6 |
-
-Transparansi dan profil ICC dipertahankan. High Quality memverifikasi piksel RGBA hasil decode, termasuk warna di area transparan. Batas format WebP adalah 16383 piksel per sisi; gunakan Standard/Small untuk gambar yang melampaui batas tersebut.
-
-### Input AVIF
-
-AVIF dibaca melalui `avifdec`, sehingga tetap tersedia pada sistem yang Pillow-nya belum mendukung AVIF. Metadata jumlah frame diperiksa lebih dahulu; AVIF animasi/sequence dilewati. Input AVIF di atas 8-bit dilewati pada High Quality untuk output lossless (AVIF/PNG/WebP); preset lain menormalkan hasil ke 8-bit. Semua output dari input AVIF memerlukan `avifdec`.
-
-## Instalasi
-
-### Unduh satu installer
-
-Unduh [install-image.sh](https://raw.githubusercontent.com/endyardhie/Nemo-Convert-Image/main/install-image.sh), lalu jalankan sebagai pengguna desktop biasa:
+Buka terminal di folder installer, lalu jalankan:
 
 ```bash
-bash "$(xdg-user-dir DOWNLOAD)/install-image.sh"
-```
-
-### Dari GitHub
-
-```bash
-git clone https://github.com/endyardhie/Nemo-Convert-Image.git
-cd Nemo-Convert-Image
-bash install-image.sh
-```
-
-Jangan menjalankan installer dengan `sudo bash`. Installer hanya menggunakan sudo untuk memasang paket APT; file aplikasinya dipasang untuk pengguna saat ini.
-
-Setelah pemasangan selesai, tunggu aktivitas salin/pindah file di Nemo selesai, lalu jalankan:
-
-```bash
-nemo -q
-```
-
-Buka kembali Nemo, pilih satu atau beberapa gambar, lalu **klik kanan → Convert Image → Avif / Jpg / Pdf / Png / Webp → pilih preset**. Jika menu belum muncul, periksa **Edit → Plugins** dan aktifkan ekstensi yang terkait, lalu mulai ulang Nemo.
-
-## Perilaku aplikasi
-
-- File asli tidak ditimpa atau dihapus.
-- Hasil disimpan di folder sumber: `foto-high.avif`, `foto-high.jpg`, `foto-high.pdf`, `foto-high.png`, atau `foto-high.webp`, sesuai format dan preset. Standard/Small memakai akhiran `-standard`/`-small`.
-- Jika nama sudah ada, nomor ditambahkan, misalnya `foto-high-1.avif`.
-- Mendukung nama file dengan spasi, Unicode, dan karakter khusus tanpa mengeksekusinya sebagai perintah shell.
-- Batch diproses berurutan di luar proses Nemo agar file manager tetap responsif.
-- Dialog menampilkan file yang sedang diproses, tombol batal, dan ringkasan ukuran setelah selesai.
-- Batal menghentikan encoder AVIF aktif. Untuk JPG/PDF/PNG/WebP, pembatalan diperiksa setelah encoding selesai sebelum publikasi hasil. Hasil yang sudah selesai tetap disimpan.
-- Pada AVIF/PNG/WebP, transparansi dan profil ICC diteruskan. Orientasi EXIF diterapkan ke piksel; EXIF/XMP tidak disalin.
-- Setiap hasil didekode untuk pemeriksaan dimensi. High Quality AVIF/WebP dan semua preset PNG juga memeriksa kesamaan seluruh piksel RGBA terhadap gambar yang telah disiapkan (termasuk resize).
-
-## Persyaratan dan batasan
-
-Target utama: **Linux Mint 22.x Cinnamon**, Nemo, Python sistem, Pillow, `libavif-bin` dengan encoder libaom, Zenity, dan binding Python Nemo. Integrasi menu perlu diperiksa pada desktop Nemo pengguna; pengujian otomatis headless tidak membuktikan tampilnya menu pada setiap versi desktop.
-
-Nama paket binding berbeda menurut distribusi:
-
-| Sistem | Paket |
-| --- | --- |
-| Linux Mint | `python-nemo` |
-| Ubuntu / Debian | `nemo-python` |
-
-Paket lain: `python3`, `python3-gi`, `gir1.2-nemo-3.0`, `python3-pil`, `python3-reportlab`, `python3-pypdf`, `libavif-bin`, `zenity`.
-
-- Gambar animasi WebP/APNG/AVIF dilewati; aplikasi ini hanya untuk gambar diam.
-- High Quality untuk output lossless (AVIF/PNG/WebP) melewati PNG/AVIF lebih dari 8-bit dan JPEG CMYK agar tidak mengklaim lossless setelah menurunkan kedalaman atau mengubah model warna.
-- Seluruh output memakai gambar 8-bit; kedalaman PNG 16-bit akan berkurang. JPEG CMYK dengan profil ICC dikonversi melalui profilnya; tanpa profil digunakan konversi bawaan Pillow.
-- Hanya file lokal/mount dengan path lokal yang didukung. File perlu bisa dibaca dan folder sumber perlu bisa ditulis.
-- Dibutuhkan ruang sementara untuk PNG dan hasil decode. Foto besar dengan speed 0 bisa membutuhkan waktu beberapa menit atau lebih.
-- Encoding yang gagal atau tidak lolos pemeriksaan tidak dipublikasikan sebagai hasil akhir.
-
-## Konfigurasi
-
-Pengaturan dibuat di `~/.config/img2avif/config.json` (atau `$XDG_CONFIG_HOME/img2avif/config.json`):
-
-```json
-{
-  "speed": 0,
-  "threads": 4,
-  "standard_edge": 1920,
-  "standard_quality": 60,
-  "small_edge": 1280,
-  "small_quality": 40,
-  "jpg_high_quality": 95,
-  "jpg_standard_quality": 85,
-  "jpg_small_quality": 70,
-  "pdf_high_quality": 95,
-  "pdf_standard_quality": 85,
-  "pdf_small_quality": 70,
-  "webp_standard_quality": 80,
-  "webp_small_quality": 60
-}
-```
-
-`speed` berada pada rentang 0–10: 0 paling lambat; angka lebih tinggi mempercepat encoding dan dapat mengubah ukuran file. Untuk penggunaan harian yang lebih cepat, coba 4 atau 6. `threads` dibatasi jumlah CPU yang tersedia. Perubahan konfigurasi dibaca pada konversi berikutnya. Tooltip menu menunjukkan nilai default.
-
-Installer tidak menimpa konfigurasi yang sudah ada. Konfigurasi lama yang belum memiliki opsi `jpg_*`/`pdf_*` otomatis memakai default 95/85/70. Rentang kualitas JPG/PDF adalah 1–95; opsi `standard_quality`/`small_quality` dan `speed` khusus AVIF, sedangkan batas resolusi dipakai semua format. `webp_standard_quality` dan `webp_small_quality` memiliki rentang 1–100, default 80/60. PNG dan WebP High Quality tidak memakai nilai kualitas lossy. Semua opsi yang belum ada dalam konfigurasi lama memakai default.
-
-## Update, pemeriksaan, dan uninstall
-
-Jika checkout masih memakai alamat repo lama, perbarui remote terlebih dahulu:
-
-```bash
-git remote set-url origin https://github.com/endyardhie/Nemo-Convert-Image.git
-```
-
-`install-image.sh` adalah installer utama. `install-img2avif.sh` tetap disediakan dengan payload yang sama untuk kompatibilitas tautan lama. CLI tanpa `--format` tetap menghasilkan AVIF.
-
-```bash
-# Update dari checkout Git yang sudah ada
-git pull --ff-only
-bash install-image.sh
-
-# Periksa dependensi tanpa mengubah file atau menjalankan APT
-bash install-image.sh --check
-
-# Lewati pemasangan paket APT, tetap periksa dependensi
-bash install-image.sh --no-deps
-
-# Hapus menu, converter, dan launcher
 bash install-image.sh --uninstall
 ```
 
-Uninstall juga dapat dijalankan dengan `bash uninstall.sh` dari checkout. Konfigurasi, log, backup, dan gambar tetap disimpan. Mulai ulang Nemo setelah update atau uninstall.
+Mulai ulang Nemo sesudahnya. Menu dan aplikasi konversi akan dihapus; gambar asli, hasil konversi, pengaturan, log, serta cadangan tetap tersimpan.
 
-File aplikasi berada di `~/.local/share/img2avif/convert.py` dan `~/.local/share/nemo-python/extensions/nemo_img2avif.py`, mengikuti `$XDG_DATA_HOME` bila diatur. Launcher utama dipasang di `~/.local/bin/convert-image`; `~/.local/bin/img2avif` tetap tersedia untuk kompatibilitas. Nama direktori konfigurasi, cache, dan ekstensi lama dipertahankan agar update tidak membuat dua menu atau kehilangan pengaturan. File lama dicadangkan di `~/.local/share/img2avif-backups/` sebelum diubah; bila penulisan gagal, installer mencoba memulihkan file yang sudah diubah.
+## Pertanyaan umum
 
-CLI dapat digunakan bila `~/.local/bin` ada dalam PATH:
+<details>
+<summary><strong>Menu Convert Image belum muncul. Apa yang harus saya lakukan?</strong></summary>
 
-```bash
-convert-image --format avif standard --no-gui -- "/path/foto satu.jpg" "/path/foto dua.png"
-convert-image --format jpg small --no-gui -- "/path/foto satu.jpg"
-convert-image --format pdf standard --no-gui -- "/path/foto satu.jpg" "/path/foto dua.png"
-convert-image --format png high --no-gui -- "/path/foto.avif"
-convert-image --format webp standard --no-gui -- "/path/foto.png"
-```
+Pastikan Anda memakai pengelola file **Nemo** dan memilih gambar JPG/JPEG, PNG, WebP, atau AVIF. Jika pilihan berisi folder atau jenis file lain, menu tidak ditampilkan. Jalankan `nemo -q`, lalu buka kembali Nemo. Jika masih belum muncul, periksa **Edit → Plugins** dan aktifkan ekstensi yang terkait.
 
-### Dependensi PDF tanpa akses administrator
+</details>
 
-Installer APT memasang `python3-reportlab` dan `python3-pypdf`. Jika pemasangan paket sistem tidak tersedia tetapi Python pip sudah ada, alternatifnya pasang hanya untuk converter ini:
+<details>
+<summary><strong>Mengapa konversi AVIF terasa lama?</strong></summary>
 
-```bash
-pdf_vendor="${XDG_DATA_HOME:-$HOME/.local/share}/img2avif/vendor"
-python3 -m pip install --target "$pdf_vendor" 'reportlab>=3.6,<5' 'pypdf>=3,<7'
-bash install-image.sh --no-deps
-```
+Pengaturan bawaan AVIF mengutamakan kompresi, sehingga foto besar bisa membutuhkan waktu beberapa menit atau lebih. Periksa nama file pada jendela proses dan tunggu sampai selesai. Pilih JPG atau WebP jika format tersebut juga sesuai dengan kebutuhan Anda.
 
-Converter dan pemeriksa dependensi installer dapat membaca folder `vendor` tersebut. Uninstall mempertahankan folder dependensi ini, seperti konfigurasi dan log. JPG, AVIF, PNG, dan WebP tidak menggunakan pustaka PDF pada proses konversinya.
+</details>
 
-## Troubleshooting
+<details>
+<summary><strong>Apakah latar transparan akan tetap transparan?</strong></summary>
 
-**APT gagal:** perbaiki repo yang disebut pada output APT, lalu jalankan installer lagi. Installer tidak mengubah repo sistem dan berhenti sebelum mengubah aplikasi bila pemasangan dependensi gagal.
+Ya, pada hasil **AVIF, PNG, dan WebP**. Pada hasil **JPG dan PDF**, area transparan akan menjadi putih.
 
-**Repo Cloudflare meminta `zena`:** untuk Linux Mint berbasis Ubuntu 24.04, repo WARP perlu suite Ubuntu `noble`, bukan kode Mint. Ubah hanya entri Cloudflare yang bermasalah, mengikuti [petunjuk Cloudflare](https://pkg.cloudflareclient.com/). Pemberitahuan bahwa repo tidak mendukung `i386` berbeda dengan error `Release file` dan bukan penyebab paket `python3-nemo` tidak ditemukan.
+</details>
 
-**Paket `python3-nemo` tidak ditemukan:** paket Linux Mint bernama `python-nemo`; versi installer dalam repo ini sudah menggunakan nama tersebut.
+<details>
+<summary><strong>Bisakah beberapa foto digabung menjadi satu PDF?</strong></summary>
 
-**Konversi gagal:** lihat log pada dialog hasil, di `~/.cache/img2avif/` (atau `$XDG_CACHE_HOME/img2avif/`). Jalankan preset melalui CLI untuk melihat ringkasan di terminal. Log dapat berisi nama/path file lokal; periksa isinya sebelum membagikannya.
+Belum. Setiap gambar menghasilkan PDF tersendiri. Isi PDF berupa gambar; tulisan pada foto tidak diubah menjadi teks yang dapat dipilih atau diedit.
 
-## Pengembangan dan pengujian
+</details>
 
-Source utama berada di `src/`; jangan mengedit payload installer secara manual. Setelah mengubah source:
+<details>
+<summary><strong>Mengapa ada gambar yang gagal atau dilewati?</strong></summary>
 
-```bash
-python3 scripts/build_installer.py
-bash -n install-image.sh install-img2avif.sh uninstall.sh
-python3 scripts/build_installer.py --check
-python3 -m unittest discover -s tests -v
-```
+Aplikasi ini mendukung **gambar diam**. Gambar animasi dan dokumen PDF tidak dapat dijadikan file asal. Pastikan gambar bisa dibuka dan foldernya bisa menyimpan file baru. Gambar tertentu dengan kedalaman warna tinggi atau model warna khusus dapat dilewati pada High Quality; coba Standard atau Small Size. Jika tetap gagal, lihat alasan dan lokasi log pada ringkasan hasil.
 
-Tes JPG memakai encoder JPEG Pillow asli, termasuk JPG → JPG, ketiga preset, alpha putih, profil ICC, kegagalan/batal, serta CLI tanpa codec AVIF. Hierarki lima belas aksi menu diuji dengan API Nemo tiruan. Tes PDF memeriksa ketiga preset, satu halaman per gambar, rasio dan dimensi, orientasi EXIF, alpha putih, penamaan tanpa overwrite, kegagalan/batal, kompatibilitas konfigurasi, dan batch CLI. Tes lintas format memeriksa 75 kombinasi: lima jenis input × lima output × tiga preset. AVIF sequence, decoder hilang, kesamaan piksel PNG/WebP lossless, profil ICC, dan kegagalan encoding juga diuji. Tes integrasi AVIF memakai `avifenc` dan `avifdec` asli jika tersedia; bila tidak tersedia, tes tersebut ditandai **skipped**, bukan dianggap lulus. Tes tidak memasang paket maupun me-restart Nemo. Sebelum rilis, lakukan juga pemasangan dan klik kanan manual pada Linux Mint Cinnamon.
+</details>
 
-## Referensi
+<details>
+<summary><strong>Pemasangan berhenti dengan pesan error. Bagaimana melanjutkannya?</strong></summary>
 
-- [Paket resmi Linux Mint Zena](https://fastly.linuxmint.io/list.php?release=zena)
-- [Nemo Python bindings](https://github.com/linuxmint/nemo-extensions/tree/master/nemo-python)
-- [Opsi JPEG Pillow](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#jpeg)
-- [libavif / avifenc](https://github.com/AOMediaCodec/libavif)
-- [Opsi avifenc Ubuntu 24.04](https://manpages.ubuntu.com/manpages/noble/man1/avifenc.1.html)
+Periksa koneksi internet dan pesan di terminal. Jangan lanjutkan memakai aplikasi jika pemasangan belum selesai. Installer dapat dijalankan kembali setelah penyebab error diperbaiki. Petunjuk pemeriksaan paket dan pemasangan alternatif tersedia di [panduan teknis](docs/advanced.md).
+
+</details>
+
+---
+
+**Untuk pengguna lanjutan:** pengaturan kualitas, penggunaan melalui terminal, pemecahan masalah, dan petunjuk pengembangan tersedia di **[panduan teknis](docs/advanced.md)**. Riwayat pembaruan dapat dibaca di **[Changelog](CHANGELOG.md)**.
 
 ## Lisensi
 
-[MIT](LICENSE) — Endy Ardhie.
+Gratis digunakan dan dimodifikasi sesuai **[MIT License](LICENSE)**, termasuk untuk kebutuhan komersial, dengan menyertakan pemberitahuan hak cipta dan lisensi.
