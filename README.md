@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="assets/branding/banner.png" alt="Nemo Convert Image — Right-click. Convert. Done." width="1200">
+  <img src="assets/branding/banner.png" alt="Convert Image — Right-click. Convert. Done." width="1200">
 </h1>
 
 <p align="center"><strong>Ubah format gambar langsung dari menu klik kanan.</strong></p>
@@ -7,7 +7,8 @@
 <p align="center">Pilih gambar. Tentukan format. Hasil langsung tersimpan.</p>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/endyardhie/Nemo-Convert-Image/main/install-image.sh"><strong>Unduh installer</strong></a> ·
+  <a href="https://raw.githubusercontent.com/endyardhie/Convert-Image/main/install-image.sh"><strong>Linux</strong></a> ·
+  <a href="https://github.com/endyardhie/Convert-Image/releases/tag/v3.0.0-beta.1"><strong>Windows — Pratinjau</strong></a> ·
   <a href="#cara-memasang">Panduan pemasangan</a> ·
   <a href="#cara-menggunakan">Cara menggunakan</a> ·
   <a href="#pertanyaan-umum">Pertanyaan umum</a>
@@ -15,7 +16,7 @@
 
 ---
 
-**Nemo Convert Image** membantu Anda menyiapkan foto untuk dibagikan, mengubah gambar untuk website, atau menyimpan gambar sebagai PDF. Semuanya dilakukan melalui **Nemo**, pengelola file pada Linux Mint Cinnamon.
+**Convert Image** membantu Anda menyiapkan foto untuk dibagikan, mengubah gambar untuk website, atau menyimpan gambar sebagai PDF. Pilih versi untuk **Linux dengan Nemo** atau **Windows dengan File Explorer**, lalu gunakan langsung dari menu klik kanan.
 
 Tidak perlu mengunggah gambar ke layanan online atau membuka aplikasi editor. Anda bisa memilih satu gambar maupun banyak gambar sekaligus. **File asli tetap tersimpan; hasil konversi dibuat sebagai file baru.**
 
@@ -25,9 +26,16 @@ Tidak perlu mengunggah gambar ke layanan online atau membuka aplikasi editor. An
 
 ## Cara memasang
 
-Ditujukan untuk **Linux Mint 22.x Cinnamon dengan pengelola file Nemo**. Koneksi internet diperlukan saat pemasangan untuk mengunduh perlengkapan aplikasi yang belum tersedia.
+| Sistem yang Anda gunakan | Pilih installer |
+| --- | --- |
+| **Linux Mint Cinnamon, Ubuntu, atau Debian dengan Nemo** | [install-image.sh](https://raw.githubusercontent.com/endyardhie/Convert-Image/main/install-image.sh) |
+| **Windows 10/11 x64 — versi pratinjau** | [Windows Setup.exe](https://github.com/endyardhie/Convert-Image/releases/tag/v3.0.0-beta.1) |
 
-1. **[Unduh installer](https://raw.githubusercontent.com/endyardhie/Nemo-Convert-Image/main/install-image.sh)** dan simpan dengan nama `install-image.sh`. Jika browser menampilkan isi script, simpan halaman tersebut sebagai file dengan nama yang sama.
+### Linux
+
+Ditujukan terutama untuk **Linux Mint 22.x Cinnamon**. Ubuntu dan Debian memerlukan pengelola file **Nemo**; menu ini belum terintegrasi dengan Nautilus atau Dolphin. Koneksi internet diperlukan saat pemasangan untuk mengunduh perlengkapan aplikasi yang belum tersedia.
+
+1. **[Unduh installer](https://raw.githubusercontent.com/endyardhie/Convert-Image/main/install-image.sh)** dan simpan dengan nama `install-image.sh`. Jika browser menampilkan isi script, simpan halaman tersebut sebagai file dengan nama yang sama.
 2. Buka folder tempat Anda menyimpannya, lalu pilih **Buka di Terminal / Open in Terminal** dari menu klik kanan pada area kosong folder.
 3. Salin dan jalankan perintah berikut:
 
@@ -43,6 +51,15 @@ Ditujukan untuk **Linux Mint 22.x Cinnamon dengan pengelola file Nemo**. Koneksi
    ```
 
 6. Buka kembali pengelola file. Menu **Convert Image** siap digunakan saat Anda memilih gambar yang didukung.
+
+### Windows
+
+1. Buka **[halaman unduhan Windows](https://github.com/endyardhie/Convert-Image/releases/tag/v3.0.0-beta.1)**, lalu unduh file **`Convert-Image-3.0.0-Windows-x64-Setup.exe`** pada bagian **Assets**.
+2. Buka installer, lalu ikuti langkah pemasangan sampai selesai. Aplikasi dipasang untuk akun Windows Anda; **Python dan komponen konversi sudah disertakan**.
+3. Pilih gambar di File Explorer, lalu klik kanan → **Convert Image**.
+4. Pada **Windows 11**, buka **Show more options / Tampilkan opsi lainnya** terlebih dahulu jika menu belum terlihat. Anda juga bisa membuka **Convert Image** dari menu **Start** untuk memilih beberapa gambar sekaligus.
+
+Versi Windows merupakan **rilis pratinjau** untuk komputer x64. Pengujian otomatis mencakup konversi, menu, pemasangan, pembaruan, dan penghapusan; tampilan menu pada desktop Windows Anda masih perlu dicoba. Installer belum ditandatangani secara digital, sehingga Windows dapat menampilkan pemberitahuan penerbit tidak dikenal. Build ini belum ditujukan untuk Windows ARM64 atau 32-bit.
 
 ## Cara menggunakan
 
@@ -96,11 +113,13 @@ Anda bisa membatalkan proses dari jendela konversi. Hasil yang sudah selesai tet
 
 ### Memperbarui
 
-Unduh kembali **[installer terbaru](https://raw.githubusercontent.com/endyardhie/Nemo-Convert-Image/main/install-image.sh)**, lalu ulangi langkah pemasangan. Pengaturan Anda tetap dipertahankan. Mulai ulang Nemo setelah selesai.
+Unduh kembali **[installer terbaru](https://raw.githubusercontent.com/endyardhie/Convert-Image/main/install-image.sh)**, lalu ulangi langkah pemasangan. Pengaturan Anda tetap dipertahankan. Mulai ulang Nemo setelah selesai.
+
+Untuk Windows, unduh installer versi berikutnya dari **[Releases](https://github.com/endyardhie/Convert-Image/releases)**, tutup aplikasi konversi, lalu jalankan installer tersebut. Pengaturan Anda tetap tersimpan.
 
 ### Menghapus
 
-Buka terminal di folder installer, lalu jalankan:
+**Linux:** buka terminal di folder installer, lalu jalankan:
 
 ```bash
 bash install-image.sh --uninstall
@@ -108,12 +127,18 @@ bash install-image.sh --uninstall
 
 Mulai ulang Nemo sesudahnya. Menu dan aplikasi konversi akan dihapus; gambar asli, hasil konversi, pengaturan, log, serta cadangan tetap tersimpan.
 
+**Windows:** buka **Settings → Apps → Installed apps → Convert Image → Uninstall**. Gambar asli, hasil konversi, pengaturan, dan log tetap tersimpan. Jika Windows meminta penutupan File Explorer untuk memperbarui atau menghapus ekstensi, selesaikan dahulu aktivitas salin/pindah file Anda.
+
 ## Pertanyaan umum
 
 <details>
 <summary><strong>Menu Convert Image belum muncul. Apa yang harus saya lakukan?</strong></summary>
 
-Pastikan Anda memakai pengelola file **Nemo** dan memilih gambar JPG/JPEG, PNG, WebP, atau AVIF. Jika pilihan berisi folder atau jenis file lain, menu tidak ditampilkan. Jalankan `nemo -q`, lalu buka kembali Nemo. Jika masih belum muncul, periksa **Edit → Plugins** dan aktifkan ekstensi yang terkait.
+Pilih gambar JPG/JPEG, PNG, WebP, atau AVIF. Jika pilihan berisi folder atau jenis file lain, menu tidak ditampilkan.
+
+**Linux:** gunakan pengelola file **Nemo**. Jalankan `nemo -q`, lalu buka kembali Nemo. Jika masih belum muncul, periksa **Edit → Plugins** dan aktifkan ekstensi yang terkait.
+
+**Windows:** coba **Show more options** pada Windows 11. Jika menu belum tampil setelah pemasangan, tutup dan buka kembali File Explorer. Anda tetap dapat memakai aplikasi dari menu **Start → Convert Image**. Jalankan kembali installer jika perlu memperbaiki pemasangan.
 
 </details>
 

@@ -1,3 +1,4 @@
+import sys
 import importlib.util
 import io
 import os
@@ -21,7 +22,7 @@ class FormatTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name); self.cfg = c.DEFAULTS.copy()
         self.cfg.update(speed=8, threads=1, standard_edge=48, small_edge=32)
-        probe = subprocess.run(['avifenc','--help'],capture_output=True,text=True,check=True)
+        probe = subprocess.run(['avifenc','--help'],capture_output=True,text=True,encoding='utf-8',errors='replace',check=True)
         self.modern = '--qcolor' in probe.stdout+probe.stderr
 
     def convert(self, source, output, mode='high'):
@@ -83,7 +84,7 @@ class FormatTests(unittest.TestCase):
     def test_avif_missing_decoder_reports_error(self):
         source=self.root/'input.avif';source.write_bytes(b'invalid')
         env=dict(os.environ,PATH='',XDG_CACHE_HOME=str(self.root/'cache'),XDG_CONFIG_HOME=str(self.root/'config'))
-        result=subprocess.run(['/usr/bin/python3',str(ROOT/'src/convert.py'),'--format','png','high','--no-gui','--',str(source)],env=env,capture_output=True,text=True)
+        result=subprocess.run([sys.executable,str(ROOT/'src/convert.py'),'--format','png','high','--no-gui','--',str(source)],env=env,capture_output=True,text=True,encoding='utf-8',errors='replace')
         self.assertEqual(result.returncode,1);self.assertIn('avifdec',result.stdout)
 
     def test_failed_png_webp_encode_and_cancellation_do_not_publish(self):

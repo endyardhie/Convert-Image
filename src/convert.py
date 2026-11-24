@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Convert Image: safe, sequential still-image conversion for Nemo."""
+"""Convert Image: shared, validated image conversion for Linux and Windows."""
 import argparse
 import errno
 import io
@@ -36,17 +36,54 @@ class Cancelled(Exception):
     pass
 
 
+def windows():
+    return sys.platform == "win32"
+
+
+def user_directory(kind):
+    if windows():
+        base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData/Local")) / "Convert Image"
+        return base / kind
+    variable = "XDG_CONFIG_HOME" if kind == "config" else "XDG_CACHE_HOME"
+    fallback = ".config" if kind == "config" else ".cache"
+    return Path(os.environ.get(variable, Path.home() / fallback)) / "img2avif"
+
+
+def find_tool(name):
+    if windows():
+        # Use the verified bundled codec before anything found in PATH.
+        bundle = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        candidate = bundle / "tools" / (name + ".exe")
+        if candidate.is_file():
+            return str(candidate)
+    return shutil.which(name)
+
+
+def process_options():
+    return {"creationflags": subprocess.CREATE_NO_WINDOW} if windows() else {}
+
+
 def message(text, error=False):
+    if windows():
+        import tkinter as tk
+        from tkinter import messagebox
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            (messagebox.showerror if error else messagebox.showinfo)("Convert Image", text, parent=root)
+        finally:
+            root.destroy()
+        return
     subprocess.run(["zenity", "--error" if error else "--info", "--no-markup",
                     "--title=Convert Image", "--width=560", "--text=" + text],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def settings():
-    config = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "img2avif/config.json"
+    config = user_directory("config") / "config.json"
     result = DEFAULTS.copy()
     if config.exists():
-        result.update(json.loads(config.read_text()))
+        result.update(json.loads(config.read_text(encoding="utf-8")))
     limits = {"speed": (0, 10), "threads": (1, 64), "standard_edge": (1, 16384),
               "small_edge": (1, 16384), "standard_quality": (1, 99), "small_quality": (1, 99), "jpg_high_quality": (1, 95),
               "jpg_standard_quality": (1, 95), "jpg_small_quality": (1, 95), "pdf_high_quality": (1, 95),
@@ -65,6 +102,29 @@ def settings():
 class Progress:
     def __init__(self, mode, count, headless, output_format="avif"):
         self.proc = None
+        self.window = None
+        self.cancelled = False
+        if not headless and windows():
+            import tkinter as tk
+            from tkinter import ttk
+            self.window = tk.Tk()
+            self.window.title("Convert Image — " + output_format.upper())
+            self.window.geometry("560x210")
+            self.window.resizable(False, False)
+            self.window.configure(background="#f1faf6")
+            self.window.protocol("WM_DELETE_WINDOW", self.cancel)
+            frame = ttk.Frame(self.window, padding=24)
+            frame.pack(fill="both", expand=True)
+            ttk.Label(frame, text=output_format.upper() + " · " + MODES[mode], font=("Segoe UI", 14, "bold")).pack(anchor="w")
+            self.label = tk.StringVar(value="Memulai konversi " + str(count) + " gambar…")
+            ttk.Label(frame, textvariable=self.label, wraplength=510).pack(anchor="w", pady=(12, 8))
+            self.bar = ttk.Progressbar(frame, mode="indeterminate")
+            self.bar.pack(fill="x")
+            self.bar.start(12)
+            self.cancel_button = ttk.Button(frame, text="Batalkan", command=self.cancel)
+            self.cancel_button.pack(anchor="e", pady=(12, 0))
+            self.window.update()
+            return
         if not headless:
             self.proc = subprocess.Popen(
                 ["zenity", "--progress", "--pulsate", "--auto-close", "--no-markup",
@@ -74,11 +134,23 @@ class Progress:
                 text=True)
 
     def check(self):
+        if self.window:
+            self.window.update()
+        if self.cancelled:
+            raise Cancelled()
         if self.proc and self.proc.poll() is not None:
             raise Cancelled()
 
+    def cancel(self):
+        self.cancelled = True
+        self.label.set("Membatalkan proses…")
+        self.cancel_button.configure(state="disabled")
+
     def update(self, text):
         self.check()
+        if self.window:
+            self.label.set(text.replace("\n", " ").replace("\r", " "))
+            self.window.update()
         if self.proc:
             try:
                 self.proc.stdin.write("# " + text.replace("\n", " ").replace("\r", " ") + "\n")
@@ -87,6 +159,10 @@ class Progress:
                 raise Cancelled()
 
     def close(self):
+        if self.window:
+            self.bar.stop()
+            self.window.destroy()
+            self.window = None
         if self.proc:
             try:
                 self.proc.stdin.close()
@@ -101,7 +177,10 @@ def run(command, progress, log):
     progress.check()
     log.write("COMMAND " + repr(command) + "\n")
     log.flush()
-    proc = subprocess.Popen(command, stdout=log, stderr=log)
+    command = list(command)
+    if windows() and command[0] in ("avifenc", "avifdec"):
+        command[0] = find_tool(command[0]) or command[0]
+    proc = subprocess.Popen(command, stdout=log, stderr=log, **process_options())
     try:
         while proc.poll() is None:
             progress.check()
@@ -250,9 +329,9 @@ def convert(source, mode, cfg, modern, progress, log, output_format="avif"):
         if source.suffix.lower() == ".avif":
             # Use libavif even on systems whose Pillow has no AVIF plugin.
             info = temp / "avif-info.txt"
-            with info.open("w") as metadata:
+            with info.open("w", encoding="utf-8") as metadata:
                 run(["avifdec", "--info", str(source)], progress, metadata)
-            report = info.read_text()
+            report = info.read_text(encoding="utf-8", errors="replace")
             log.write(report)
             frames = re.findall(r"^\s*\*\s+\d+ timescales per second.*?,\s*(\d+) frames?\s*$", report, re.MULTILINE)
             depth = re.findall(r"^\s*\*\s+Bit Depth\s*:\s*(\d+)\s*$", report, re.MULTILINE)
@@ -330,14 +409,21 @@ def convert(source, mode, cfg, modern, progress, log, output_format="avif"):
 
 
 def main():
+    if windows():
+        for stream in (sys.stdout, sys.stderr):
+            if stream is not None and hasattr(stream, "reconfigure"):
+                stream.reconfigure(encoding="utf-8", errors="replace")
     if len(sys.argv) == 3 and sys.argv[1] == "--request":
         request = Path(sys.argv[2])
         try:
-            payload = json.loads(request.read_text())
-            sys.argv[1:] = ["--format", payload.get("format", "avif"), payload["mode"], "--"] + list(payload["files"])
+            payload = json.loads(request.read_text(encoding="utf-8"))
+            if not isinstance(payload.get("files"), list) or not payload["files"] or not all(isinstance(p, str) for p in payload["files"]):
+                raise ValueError("Daftar gambar tidak valid")
+            options = ["--no-gui"] if payload.get("no_gui") is True else []
+            sys.argv[1:] = ["--format", payload.get("format", "avif"), payload["mode"], *options, "--", *payload["files"]]
         finally:
             request.unlink(missing_ok=True)
-    parser = argparse.ArgumentParser(description="Convert Image untuk Nemo")
+    parser = argparse.ArgumentParser(description="Convert Image untuk Linux dan Windows")
     parser.add_argument("--format", choices=("avif", "jpg", "pdf", "png", "webp"), default="avif", dest="output_format")
     parser.add_argument("mode", choices=MODES)
     parser.add_argument("--no-gui", action="store_true")
@@ -345,11 +431,11 @@ def main():
     args = parser.parse_args()
     progress = None
     try:
-        required = (["avifenc", "avifdec"] if args.output_format == "avif" else []) + ([] if args.no_gui else ["zenity"])
+        required = (["avifenc", "avifdec"] if args.output_format == "avif" else []) + ([] if args.no_gui or windows() else ["zenity"])
         if any(Path(filename).suffix.lower() == ".avif" for filename in args.files) and "avifdec" not in required:
             required.append("avifdec")
         for tool in required:
-            if not shutil.which(tool):
+            if not find_tool(tool):
                 raise RuntimeError("Program belum terpasang: " + tool)
         if args.output_format == "pdf":
             try:
@@ -360,16 +446,17 @@ def main():
         cfg = settings()
         modern = False
         if args.output_format == "avif":
-            probe = subprocess.run(["avifenc", "--help"], capture_output=True, text=True, check=True)
+            probe = subprocess.run([find_tool("avifenc"), "--help"], capture_output=True, text=True,
+                                   encoding="utf-8", errors="replace", check=True, **process_options())
             modern = "--qcolor" in probe.stdout + probe.stderr
-        cache = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "img2avif"
+        cache = user_directory("cache")
         cache.mkdir(parents=True, exist_ok=True)
         descriptor, name = tempfile.mkstemp(prefix="convert-", suffix=".log", dir=cache)
         logpath = Path(name)
         done, errors, total_in, total_out = [], [], 0, 0
         cancelled = False
         progress = Progress(args.mode, len(args.files), args.no_gui, args.output_format)
-        with os.fdopen(descriptor, "w") as log:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as log:
             for number, filename in enumerate(args.files, 1):
                 source = Path(os.path.abspath(filename))
                 try:
@@ -409,7 +496,7 @@ def main():
         return 130
     except Exception as exc:
         print(str(exc))
-        if not args.no_gui and shutil.which("zenity"):
+        if not args.no_gui and (windows() or shutil.which("zenity")):
             message(str(exc), error=True)
         return 1
     finally:

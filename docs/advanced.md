@@ -1,6 +1,8 @@
-# Panduan teknis Nemo Convert Image
+# Panduan teknis Convert Image
 
 [Kembali ke panduan pengguna](../README.md)
+
+Panduan build dan struktur paket Windows tersedia di [panduan Windows](windows.md). Lokasi konfigurasi Windows adalah `%LOCALAPPDATA%\Convert Image\config\config.json`, dan log berada di `%LOCALAPPDATA%\Convert Image\cache\`. Perintah APT dan jalur XDG di bawah berlaku untuk Linux.
 
 Halaman ini berisi rincian kualitas, pengaturan tambahan, penggunaan melalui terminal, serta panduan pemeriksaan dan pengembangan. Untuk pemasangan dan penggunaan sehari-hari, ikuti [panduan utama](../README.md).
 
@@ -71,8 +73,8 @@ AVIF dibaca melalui `avifdec`, sehingga tetap tersedia pada sistem yang Pillow-n
 ## Memasang dari repositori
 
 ```bash
-git clone https://github.com/endyardhie/Nemo-Convert-Image.git
-cd Nemo-Convert-Image
+git clone https://github.com/endyardhie/Convert-Image.git
+cd Convert-Image
 bash install-image.sh
 ```
 
@@ -142,7 +144,7 @@ Installer tidak menimpa konfigurasi yang sudah ada. Konfigurasi lama yang belum 
 Jika checkout masih memakai alamat repo lama, perbarui remote terlebih dahulu:
 
 ```bash
-git remote set-url origin https://github.com/endyardhie/Nemo-Convert-Image.git
+git remote set-url origin https://github.com/endyardhie/Convert-Image.git
 ```
 
 `install-image.sh` adalah installer utama. `install-img2avif.sh` tetap disediakan dengan payload yang sama untuk kompatibilitas tautan lama. CLI tanpa `--format` tetap menghasilkan AVIF.

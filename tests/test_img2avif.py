@@ -1,3 +1,5 @@
+import errno
+import sys
 import importlib.util
 import json
 import os
@@ -79,7 +81,7 @@ class ImageTests(unittest.TestCase):
         source.write_bytes(b'original')
         first = converter.publish(encoded, source, 'high')
         second = converter.publish(encoded, source, 'high')
-        with patch.object(converter.os, 'link', side_effect=OSError(95, 'No hardlinks')):
+        with patch.object(converter.os, 'link', side_effect=OSError(errno.EOPNOTSUPP, 'No hardlinks')):
             third = converter.publish(encoded, source, 'high')
         self.assertEqual(len({first, second, third}), 3)
         self.assertEqual(source.read_bytes(), b'original')
@@ -106,7 +108,7 @@ class ImageTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which('avifenc') and shutil.which('avifdec'), 'Real libavif CLI is not installed')
     def test_real_codec_lossless_and_resized_transparency(self):
         self.cfg.update(speed=8, threads=1, small_edge=32)
-        probe = __import__('subprocess').run(['avifenc', '--help'], capture_output=True, text=True, check=True)
+        probe = __import__('subprocess').run(['avifenc', '--help'], capture_output=True, text=True, encoding='utf-8', errors='replace', check=True)
         modern = '--qcolor' in probe.stdout + probe.stderr
         source = self.root / 'actual.png'
         image = Image.new('RGBA', (64, 40))
@@ -121,6 +123,7 @@ class ImageTests(unittest.TestCase):
         self.assertEqual(size, (32, 20))
 
 
+@unittest.skipIf(sys.platform == 'win32', 'Linux installer only')
 class InstallTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -216,7 +219,7 @@ class JpegTests(unittest.TestCase):
         source = self.root / 'input.jpeg'
         Image.new('RGB', (20, 10), 'blue').save(source)
         env = dict(os.environ, PATH='', XDG_CONFIG_HOME=str(self.root / 'config'), XDG_CACHE_HOME=str(self.root / 'cache'))
-        result = subprocess.run(['/usr/bin/python3', str(ROOT / 'src/convert.py'), '--format', 'jpg', 'standard', '--no-gui', '--', str(source)], env=env, capture_output=True, text=True)
+        result = subprocess.run([sys.executable, str(ROOT / 'src/convert.py'), '--format', 'jpg', 'standard', '--no-gui', '--', str(source)], env=env, capture_output=True, text=True, encoding='utf-8', errors='replace')
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertTrue((self.root / 'input-standard.jpg').exists())
 

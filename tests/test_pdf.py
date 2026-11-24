@@ -1,3 +1,4 @@
+import sys
 import importlib.util
 import io
 import json
@@ -63,7 +64,7 @@ class PdfTests(unittest.TestCase):
         sources = [self.root / 'one.jpg', self.root / 'two.webp']
         for p in sources: Image.new('RGB', (40, 24), 'green').save(p)
         env = dict(os.environ, PATH='', XDG_CACHE_HOME=str(self.root/'cache'), XDG_CONFIG_HOME=str(self.root/'config'))
-        result = subprocess.run(['/usr/bin/python3', str(ROOT/'src/convert.py'), '--format', 'pdf', 'standard', '--no-gui', '--', *map(str, sources)], capture_output=True, text=True, env=env)
+        result = subprocess.run([sys.executable, str(ROOT/'src/convert.py'), '--format', 'pdf', 'standard', '--no-gui', '--', *map(str, sources)], capture_output=True, text=True, encoding='utf-8', errors='replace', env=env)
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         for source in sources:
             self.assertEqual(len(PdfReader(source.with_name(source.stem+'-standard.pdf')).pages), 1)
@@ -82,7 +83,7 @@ class PdfTests(unittest.TestCase):
     def test_old_config_defaults_and_invalid_pdf_quality(self):
         cfg = self.root/'img2avif/config.json'; cfg.parent.mkdir()
         cfg.write_text('{"speed": 4}')
-        with patch.dict(os.environ, XDG_CONFIG_HOME=str(self.root)):
+        with patch.object(converter, 'user_directory', return_value=self.root/'img2avif'):
             self.assertEqual(converter.settings()['pdf_high_quality'], 95)
             cfg.write_text('{"pdf_small_quality": 100}')
             with self.assertRaisesRegex(ValueError, 'pdf_small_quality'): converter.settings()

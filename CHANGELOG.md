@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.0 — Windows preview
+
+- Nama aplikasi dan repositori menjadi **Convert Image**.
+- Tambah installer Windows x64 yang menyertakan Python dan codec AVIF.
+- Tambah menu File Explorer dengan lima format dan tiga kualitas, serta pemilihan gambar dari menu Start.
+- Gunakan satu mesin konversi untuk Linux dan Windows, dengan log UTF-8 dan pengaturan per pengguna.
+- Tambah build dan pengujian Windows/Linux otomatis, termasuk installer, pembaruan, penghapusan, batch Unicode, dan ekstensi native.
+- Perbarui logo, poster, serta panduan pemasangan untuk kedua sistem.
+
 ## 2.2.0
 
 - Tambah input AVIF melalui avifdec dengan verifikasi jumlah frame dan kedalaman warna.

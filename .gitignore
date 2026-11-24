@@ -5,3 +5,10 @@ __pycache__/
 *.log
 *.bak*
 .DS_Store
+
+build/
+dist/
+*.spec
+*.obj
+*.lib
+*.exp
