@@ -1,4 +1,6 @@
-<h1 align="center">Nemo Convert Image</h1>
+<h1 align="center">
+  <img src="assets/branding/banner.png" alt="Nemo Convert Image — Right-click. Convert. Done." width="1200">
+</h1>
 
 <p align="center"><strong>Ubah format gambar langsung dari menu klik kanan.</strong></p>
 
