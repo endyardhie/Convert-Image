@@ -26,6 +26,7 @@ if (-not (Test-Path $iscc)) { throw 'Inno Setup 6 tidak ditemukan' }
 & $iscc "/DAppVersion=$($version.version)" "/DAppFileVersion=$($version.file_version)" windows/installer.iss
 if ($LASTEXITCODE -ne 0) { throw 'Build installer gagal' }
 $installer = Get-Item "dist/Convert-Image-$($version.version)-Windows-x64-Setup.exe"
+$installer.VersionInfo | Select-Object ProductName, ProductVersion, FileVersion, CompanyName | ConvertTo-Json | Write-Host
 if ($installer.VersionInfo.ProductName -ne $version.product_name -or
     $installer.VersionInfo.ProductVersion -ne $version.version -or
     $installer.VersionInfo.FileVersion -ne $version.file_version) {

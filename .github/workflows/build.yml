@@ -27,6 +27,13 @@ jobs:
       - name: Test, build and verify installer
         shell: pwsh
         run: ./windows/build.ps1
+      - name: Save installer metadata diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Windows-build-diagnostics
+          path: dist/*-Setup.exe
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Convert-Image-Windows-x64
